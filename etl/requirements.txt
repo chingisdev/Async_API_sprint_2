@@ -1,0 +1,9 @@
+tenacity==8.2.2
+pydantic==2.1.1
+pydantic-settings==2.0.1
+pydantic_core==2.4.0
+redis==4.6.0
+elastic-transport==8.4.0
+elasticsearch==8.9.0
+sqlalchemy==2.0.19
+psycopg2==2.9.7
