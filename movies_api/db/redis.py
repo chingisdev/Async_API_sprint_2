@@ -1,8 +1,8 @@
-from redis.asyncio import Redis
+from cache_storage.redis_storage_protocol import RedisStorageProtocol
 
-redis: Redis | None = None
+redis: RedisStorageProtocol | None = None
 
 
 # Функция понадобится при внедрении зависимостей
-async def get_redis() -> Redis:
+async def get_redis() -> RedisStorageProtocol:
     return redis
