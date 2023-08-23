@@ -2,13 +2,13 @@ from functools import lru_cache
 from typing import List, Optional
 
 import orjson
+from cache_storage.redis_storage_protocol import RedisStorageProtocol
 from core.config import settings
 from db.elastic import get_elastic
 from db.redis import get_redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 from models.person import Person
-from redis.asyncio import Redis
 
 
 class PersonService:
@@ -18,7 +18,7 @@ class PersonService:
 
     def __init__(
         self,
-        redis: Redis,
+        redis: RedisStorageProtocol,
         elastic: AsyncElasticsearch,
     ):
         self.redis = redis
@@ -186,7 +186,7 @@ class PersonService:
 
 @lru_cache()
 def get_person_service(
-    redis: Redis = Depends(get_redis),
+    redis: RedisStorageProtocol = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> PersonService:
     return PersonService(
