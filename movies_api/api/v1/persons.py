@@ -3,7 +3,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.person import Person
-from services.person import PersonService, get_person_service
+from service_protocol import ModelServiceProtocol
+from services.person import get_person_service
 
 router = APIRouter()
 
@@ -31,9 +32,9 @@ async def person_details_list(
         ge=1,
         description="Page number",
     ),
-    person_service: PersonService = Depends(get_person_service),
+    model_service: ModelServiceProtocol[Person] = Depends(get_person_service),
 ) -> List[Person]:
-    persons = await person_service.get_by_parameters(
+    persons = await model_service.get_by_parameters(
         search=search,
         page_number=page_number,
         page_size=page_size,
@@ -50,9 +51,9 @@ async def person_details_list(
 )
 async def person_details(
     person_id: str,
-    person_service: PersonService = Depends(get_person_service),
+    model_service: ModelServiceProtocol[Person] = Depends(get_person_service),
 ) -> Person:
-    person = await person_service.get_by_id(person_id)
+    person = await model_service.get_by_id(person_id)
     if not person:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
