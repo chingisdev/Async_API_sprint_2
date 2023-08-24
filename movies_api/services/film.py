@@ -1,9 +1,8 @@
 from functools import lru_cache
-from typing import List, Optional
+from typing import Optional
 
-import orjson
+from cachable_service import FilmCachableService
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
-from core.config import settings
 from db.elastic import get_elastic
 from db.redis import get_redis
 from elasticsearch import NotFoundError
@@ -12,7 +11,7 @@ from models.film import Film
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 
-class FilmService:
+class FilmService(FilmCachableService):
     redis_prefix_single = "movie"
     redis_prefix_plural = "movies"
     index = "movies"
@@ -26,7 +25,7 @@ class FilmService:
         self.elastic = elastic
 
     async def get_by_id(self, film_id: str) -> Optional[Film]:
-        film = await self._get_from_cache(film_id)
+        film = await self._get_instance_from_cache(film_id)
         if not film:
             film = await self._get_from_elastic(film_id)
             if not film:
@@ -62,7 +61,7 @@ class FilmService:
                 page_number=page_number,
                 page_size=page_size,
                 sort=sort,
-                films=films,
+                instances=films,
             )
 
         return films
@@ -117,59 +116,6 @@ class FilmService:
         documents = doc["hits"]["hits"]
         films = [Film.parse_from_elastic(doc) for doc in documents]
         return films
-
-    async def _get_from_cache(self, instance_id: str) -> Optional[Film]:
-        cache_key = f"{self.redis_prefix_single}_{instance_id}"
-        data = await self.redis.get(cache_key)
-        if not data:
-            return None
-        film = Film.parse_from_redis(data)
-        return film
-
-    async def _get_list_from_cache(
-        self,
-        search: str | None,
-        page_size: int,
-        page_number: int,
-        sort: str | None = None,
-    ):
-        cache_key = f"{self.redis_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
-
-        data = await self.redis.get(cache_key)
-        if not data:
-            return None
-
-        film_list = orjson.loads(data)
-        films = [Film.parse_from_redis(film) for film in film_list]
-
-        return films
-
-    async def _put_instance_to_cache(self, film: Film):
-        cache_key = f"{self.redis_prefix_single}_{film.id}"
-        await self.redis.set(
-            cache_key,
-            film.model_dump_json(),
-            settings.cache_expire_time,
-        )
-
-    async def _put_list_to_cache(
-        self,
-        sort: str,
-        page_size: int,
-        page_number: int,
-        films: List[Film],
-        search: str,
-    ):
-        cache_key = f"{self.redis_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
-
-        films_json_list = [film.model_dump_json() for film in films]
-        films_json_str = orjson.dumps(films_json_list)
-
-        await self.redis.set(
-            cache_key,
-            films_json_str,
-            settings.cache_expire_time,
-        )
 
 
 @lru_cache()

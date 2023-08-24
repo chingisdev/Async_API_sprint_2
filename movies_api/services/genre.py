@@ -1,9 +1,8 @@
 from functools import lru_cache
-from typing import List, Optional
+from typing import Optional
 
-import orjson
+from cachable_service import GenreCachableService
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
-from core.config import settings
 from db.elastic import get_elastic
 from db.redis import get_redis
 from elasticsearch import NotFoundError
@@ -12,7 +11,7 @@ from models.genre import Genre
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 
-class GenreService:
+class GenreService(GenreCachableService):
     index = "genres"
     redis_prefix_single = "genre"
     redis_prefix_plural = "genres"
@@ -29,7 +28,7 @@ class GenreService:
         self,
         genre_id: str,
     ) -> Optional[Genre]:
-        genre = await self._get_from_cache(genre_id)
+        genre = await self._get_instance_from_cache(genre_id)
         if not genre:
             genre = await self._get_from_elastic(genre_id)
             if not genre:
@@ -64,7 +63,7 @@ class GenreService:
                 page_number=page_number,
                 page_size=page_size,
                 sort=sort,
-                genres=genres,
+                instances=genres,
             )
 
         return genres
@@ -113,63 +112,6 @@ class GenreService:
         documents = doc["hits"]["hits"]
         genres = [Genre.model_validate(doc["_source"]) for doc in documents]
         return genres
-
-    async def _get_from_cache(
-        self,
-        instance_id: str,
-    ) -> Optional[Genre]:
-        cache_key = f"{self.redis_prefix_single}_{instance_id}"
-        data = await self.redis.get(cache_key)
-        if not data:
-            return None
-        return Genre.model_validate(orjson.loads(data))
-
-    async def _get_list_from_cache(
-        self,
-        search: str | None,
-        page_size: int,
-        page_number: int,
-        sort: str | None = None,
-    ):
-        cache_key = f"{self.redis_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
-
-        data = await self.redis.get(cache_key)
-        if not data:
-            return None
-
-        genre_list = orjson.loads(data)
-        genres = [genre.model_validate(genre) for genre in genre_list]
-
-        return genres
-
-    async def _put_instance_to_cache(
-        self,
-        genre: Genre,
-    ):
-        cache_key = f"{self.redis_prefix_single}_{genre.id}"
-        await self.redis.set(
-            cache_key,
-            genre.model_dump_json(),
-            settings.cache_expire_time,
-        )
-
-    async def _put_list_to_cache(
-        self,
-        sort: str,
-        page_size: int,
-        page_number: int,
-        genres: List[Genre],
-    ):
-        cache_key = f"{self.redis_prefix_plural}_{sort or ''}_{page_size}_{page_number}"
-
-        genres_json_list = [genre.model_dump_json() for genre in genres]
-        genres_json_str = orjson.dumps(genres_json_list)
-
-        await self.redis.set(
-            cache_key,
-            genres_json_str,
-            settings.cache_expire_time,
-        )
 
 
 @lru_cache()
