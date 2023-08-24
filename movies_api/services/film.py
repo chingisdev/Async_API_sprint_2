@@ -6,16 +6,17 @@ from cache_storage.cache_storage_protocol import CacheStorageProtocol
 from core.config import settings
 from db.elastic import get_elastic
 from db.redis import get_redis
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from elasticsearch import NotFoundError
 from fastapi import Depends
 from models.film import Film
+from search_engine.search_engine_protocol import SearchEngineProtocol
 
 
 class FilmService:
     def __init__(
         self,
         redis: CacheStorageProtocol,
-        elastic: AsyncElasticsearch,
+        elastic: SearchEngineProtocol,
     ):
         self.redis = redis
         self.elastic = elastic
@@ -186,7 +187,7 @@ class FilmService:
 @lru_cache()
 def get_film_service(
     redis: CacheStorageProtocol = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
+    elastic: SearchEngineProtocol = Depends(get_elastic),
 ) -> FilmService:
     return FilmService(
         redis,

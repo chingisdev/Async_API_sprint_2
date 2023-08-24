@@ -1,10 +1,8 @@
-from typing import Optional
+from search_engine.search_engine_protocol import SearchEngineProtocol
 
-from elasticsearch import AsyncElasticsearch
-
-es: AsyncElasticsearch | None = None
+es: SearchEngineProtocol | None = None
 
 
 # Функция понадобится при внедрении зависимостей
-async def get_elastic() -> AsyncElasticsearch:
+async def get_elastic() -> SearchEngineProtocol:
     return es
