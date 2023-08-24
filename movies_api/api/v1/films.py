@@ -4,8 +4,9 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.film import Film
 from models.sort import MoviesSortOptions
-from service_protocol import ModelServiceProtocol
 from services.film import get_film_service
+
+from .service_protocol import ModelServiceProtocol
 
 router = APIRouter()
 

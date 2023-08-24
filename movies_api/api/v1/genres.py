@@ -3,8 +3,9 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.genre import Genre
-from service_protocol import ModelServiceProtocol
 from services.genre import get_genre_service
+
+from .service_protocol import ModelServiceProtocol
 
 router = APIRouter()
 
