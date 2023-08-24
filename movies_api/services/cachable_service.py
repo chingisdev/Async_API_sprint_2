@@ -1,3 +1,4 @@
+import json
 from abc import abstractmethod
 from typing import Generic, List, Optional, TypeVar
 
@@ -35,13 +36,14 @@ class CachableService(Generic[T]):
         data = await self.redis.get(cache_key)
         if not data:
             return None
-        return [self._parse_instance_from_data(item) for item in orjson.loads(data)]
+        items = orjson.loads(data)
+        return [self._parse_instance_from_data(item) for item in items]
 
     async def _put_instance_to_cache(self, instance: T):
         cache_key = f"{self.redis_prefix_single}_{instance.id}"
         await self.redis.set(
             cache_key,
-            self._dump_instance_to_json(instance),
+            instance.model_dump_json(),
             settings.cache_expire_time,
         )
 
@@ -54,17 +56,13 @@ class CachableService(Generic[T]):
         search: str | None = None,
     ):
         cache_key = f"{self.redis_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
-        instances_json_list = [self._dump_instance_to_json(instance) for instance in instances]
+        instances_json_list = [instance.model_dump_json() for instance in instances]
         instances_json_str = orjson.dumps(instances_json_list)
         await self.redis.set(
             cache_key,
             instances_json_str,
             settings.cache_expire_time,
         )
-
-    @staticmethod
-    def _dump_instance_to_json(instance: T) -> str:
-        return instance.model_dump_json()
 
     @abstractmethod
     def _parse_instance_from_data(self, data: str) -> T:
@@ -73,14 +71,17 @@ class CachableService(Generic[T]):
 
 class FilmCachableService(CachableService[Film]):
     def _parse_instance_from_data(self, data: str) -> Film:
-        return Film.parse_from_redis(data)
+        data_dict = json.loads(data)
+        return Film.parse_from_redis(data_dict)
 
 
 class PersonCachableService(CachableService[Person]):
     def _parse_instance_from_data(self, data: str) -> Person:
-        return Person.model_validate(data)
+        data_dict = json.loads(data)
+        return Person.model_validate(data_dict)
 
 
 class GenreCachableService(CachableService[Genre]):
     def _parse_instance_from_data(self, data: str) -> Genre:
-        return Genre.model_validate(data)
+        data_dict = json.loads(data)
+        return Genre.model_validate(data_dict)
