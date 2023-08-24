@@ -14,14 +14,25 @@ services:
       - movies-api
 
   etl-service:
-    build: etl
+    build: postgres_to_elastic
     restart: unless-stopped
     depends_on:
       - postgres
       - elasticsearch
       - redis
+      - sqlite-to-postgres
     env_file:
       - .env.example
+
+  sqlite-to-postgres:
+    build: sqlite_to_postgres
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    env_file:
+      - .env.example
+    expose:
+      - "8010"
 
   movies-api:
     build: movies_api
