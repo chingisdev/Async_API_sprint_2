@@ -2,7 +2,7 @@ from typing import Generic, Optional, TypeVar
 
 from pydantic import BaseModel
 
-from .cachable_service import CachingService
+from .caching_service import CachingService
 from .elastic_service import ElasticService
 
 T = TypeVar("T", bound=BaseModel)

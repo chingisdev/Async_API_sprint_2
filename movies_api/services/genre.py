@@ -7,7 +7,7 @@ from fastapi import Depends
 from models.genre import Genre
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
-from .cachable_service import GenreCachingService
+from .caching_service import GenreCachingService
 from .elastic_service import GenreElasticService
 from .search_service import SearchService
 

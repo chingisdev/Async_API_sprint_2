@@ -8,7 +8,7 @@ from fastapi import Depends
 from models.person import Person
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
-from .cachable_service import PersonCachingService
+from .caching_service import PersonCachingService
 from .elastic_service import PersonElasticService
 from .search_service import SearchService
 

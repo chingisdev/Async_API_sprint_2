@@ -8,7 +8,7 @@ from fastapi import Depends
 from models.film import Film
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
-from .cachable_service import FilmCachingService
+from .caching_service import FilmCachingService
 from .elastic_service import FilmElasticService
 from .search_service import SearchService
 
