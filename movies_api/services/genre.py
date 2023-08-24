@@ -10,10 +10,10 @@ from models.genre import Genre
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .cachable_service import GenreCachableService
+from .elastic_service import GenreElasticService
 
 
 class GenreService(GenreCachableService):
-    index = "genres"
     redis_prefix_single = "genre"
     redis_prefix_plural = "genres"
 
@@ -23,7 +23,7 @@ class GenreService(GenreCachableService):
         elastic: SearchEngineProtocol,
     ):
         self.redis = redis
-        self.elastic = elastic
+        self.elastic = GenreElasticService(elastic=elastic, index="genres")
 
     async def get_by_id(
         self,
@@ -31,7 +31,7 @@ class GenreService(GenreCachableService):
     ) -> Optional[Genre]:
         genre = await self._get_instance_from_cache(genre_id)
         if not genre:
-            genre = await self._get_from_elastic(genre_id)
+            genre = await self.elastic.get_by_id(genre_id)
             if not genre:
                 return None
             await self._put_instance_to_cache(genre)
@@ -52,7 +52,7 @@ class GenreService(GenreCachableService):
             sort=sort,
         )
         if not genres:
-            genres = await self._get_list_from_elastic(
+            genres = await self.elastic.get_by_parameters(
                 search=search,
                 page_number=page_number,
                 page_size=page_size,
@@ -67,51 +67,6 @@ class GenreService(GenreCachableService):
                 instances=genres,
             )
 
-        return genres
-
-    async def _get_from_elastic(
-        self,
-        instance_id: str,
-    ) -> Optional[Genre]:
-        try:
-            doc = await self.elastic.get(
-                index=self.index,
-                id=instance_id,
-            )
-            return Genre(**doc["_source"])
-        except NotFoundError:
-            return None
-
-    async def _get_list_from_elastic(
-        self,
-        search: Optional[str],
-        page_number: int,
-        page_size: int,
-        sort: str = None,
-    ):
-        query = {
-            "query": {"multi_match": {"query": search, "fields": ["*"], "fuzziness": "AUTO"}}
-            if search
-            else {"match_all": {}},
-            "size": page_size,
-            "from": (page_number - 1) * page_size,
-        }
-
-        if sort:
-            (sort_key, sort_order,) = (
-                (sort[1:], "desc") if sort.startswith("-") else (sort, "asc")
-            )
-            query["sort"] = [{sort_key: sort_order}]
-
-        try:
-            doc = await self.elastic.search(
-                index=self.index,
-                body=query,
-            )
-        except NotFoundError:
-            return None
-        documents = doc["hits"]["hits"]
-        genres = [Genre.model_validate(doc["_source"]) for doc in documents]
         return genres
 
 
