@@ -1,7 +1,7 @@
 from typing import Any, Optional, Protocol
 
 
-class RedisStorageProtocol(Protocol):
+class CacheStorageProtocol(Protocol):
     """
     Storage implementation that uses Redis.
     """

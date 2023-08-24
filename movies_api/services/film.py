@@ -2,7 +2,7 @@ from functools import lru_cache
 from typing import List, Optional
 
 import orjson
-from cache_storage.redis_storage_protocol import RedisStorageProtocol
+from cache_storage.cache_storage_protocol import CacheStorageProtocol
 from core.config import settings
 from db.elastic import get_elastic
 from db.redis import get_redis
@@ -14,7 +14,7 @@ from models.film import Film
 class FilmService:
     def __init__(
         self,
-        redis: RedisStorageProtocol,
+        redis: CacheStorageProtocol,
         elastic: AsyncElasticsearch,
     ):
         self.redis = redis
@@ -185,7 +185,7 @@ class FilmService:
 
 @lru_cache()
 def get_film_service(
-    redis: RedisStorageProtocol = Depends(get_redis),
+    redis: CacheStorageProtocol = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> FilmService:
     return FilmService(
