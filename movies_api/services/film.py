@@ -1,7 +1,6 @@
 from functools import lru_cache
 from typing import Optional
 
-from cachable_service import FilmCachableService
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
 from db.elastic import get_elastic
 from db.redis import get_redis
@@ -9,6 +8,8 @@ from elasticsearch import NotFoundError
 from fastapi import Depends
 from models.film import Film
 from search_engine.search_engine_protocol import SearchEngineProtocol
+
+from .cachable_service import FilmCachableService
 
 
 class FilmService(FilmCachableService):
