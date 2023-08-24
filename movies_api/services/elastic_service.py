@@ -60,24 +60,15 @@ class ElasticService(Generic[T]):
 
 
 class FilmElasticService(ElasticService[Film]):
-    def __init__(self, elastic: SearchEngineProtocol, index: str):
-        super().__init__(elastic, index=index)
-
     def deserialize(self, data):
         return Film.parse_from_elastic(data)
 
 
 class GenreElasticService(ElasticService[Genre]):
-    def __init__(self, elastic: SearchEngineProtocol, index: str):
-        super().__init__(elastic, index=index)
-
     def deserialize(self, data):
         return Genre.model_validate(data["_source"])
 
 
 class PersonElasticService(ElasticService[Person]):
-    def __init__(self, elastic: SearchEngineProtocol, index: str):
-        super().__init__(elastic, index=index)
-
     def deserialize(self, data):
         return Person.model_validate(data["_source"])
