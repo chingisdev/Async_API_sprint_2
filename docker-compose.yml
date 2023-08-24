@@ -78,3 +78,15 @@ services:
       test: ["CMD-SHELL", "curl --fail http://localhost:9200/_cluster/health || exit 1"]
       interval: 10s
       retries: 5
+
+  functional-tests:
+    build: tests
+    entrypoint: >
+      sh -c "python3 /tests/functional/utils/wait_for_es.py
+      && python3 /tests/functional/utils/wait_for_redis.py
+      && pytest /tests"
+
+    env_file:
+      - ./tests/functional/.env.example
+    depends_on:
+     - movies-api
