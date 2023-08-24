@@ -35,6 +35,8 @@ if __name__ == "__main__":
         "host": os.environ.get("POSTGRES_HOST"),
         "port": int(os.environ.get("POSTGRES_PORT")),
     }
+    logging.info(f"postgres creds: {dsl}")
+    print(dsl)
     BASE_DIR = Path(__file__).parent.absolute()
     SQLITE_DB_PATH = BASE_DIR / "db.sqlite"
     with create_sqlite_connection(SQLITE_DB_PATH) as sqlite_conn:
