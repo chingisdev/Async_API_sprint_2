@@ -33,7 +33,7 @@ async def person_details_list(
     ),
     person_service: PersonService = Depends(get_person_service),
 ) -> List[Person]:
-    persons = await person_service.filter(
+    persons = await person_service.get_by_parameters(
         search=search,
         page_number=page_number,
         page_size=page_size,

@@ -33,7 +33,7 @@ async def genre_details_list(
     ),
     genre_service: GenreService = Depends(get_genre_service),
 ) -> List[Genre]:
-    genres = await genre_service.filter(
+    genres = await genre_service.get_by_parameters(
         search=search,
         page_number=page_number,
         page_size=page_size,

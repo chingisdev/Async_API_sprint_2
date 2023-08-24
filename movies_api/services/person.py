@@ -38,7 +38,7 @@ class PersonService:
 
         return person
 
-    async def filter(
+    async def get_by_parameters(
         self,
         search: Optional[str],
         page_number: int,

@@ -34,7 +34,7 @@ class FilmService:
 
         return film
 
-    async def get_many_by_parameters(
+    async def get_by_parameters(
         self,
         page_number: int,
         page_size: int,
