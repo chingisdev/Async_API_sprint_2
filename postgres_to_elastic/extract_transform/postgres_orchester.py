@@ -19,21 +19,24 @@ class PostgresOrchester:
         table_names: List[str],
         boundaries: DateBoundaries,
     ):
-        target_extractor = None
-        for extractor in self.extractors:
-            if extractor.index == index:
-                target_extractor = extractor
-                break
-        if target_extractor is None:
-            logging.info(
-                "No target extractor for index %s",
-                index.value,
+        try:
+            target_extractor = None
+            for extractor in self.extractors:
+                if extractor.index == index:
+                    target_extractor = extractor
+                    break
+            if target_extractor is None:
+                logging.info(
+                    "No target extractor for index %s",
+                    index.value,
+                )
+                return
+            return target_extractor.get_transformed_ids(
+                table_names,
+                boundaries,
             )
-            return
-        return target_extractor.get_transformed_ids(
-            table_names,
-            boundaries,
-        )
+        except Exception as e:
+            logging.error(e)
 
     def extract_min_update_time(
         self,
