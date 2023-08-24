@@ -25,34 +25,31 @@ class PersonService:
         self.redis = redis
         self.elastic = elastic
 
-    async def get_by_id(
-        self,
-        person_id: str,
-    ) -> Optional[Person]:
-        person = await self._person_from_cache(person_id)
+    async def get_by_id(self, person_id: str) -> Optional[Person]:
+        person = await self._get_from_cache(person_id)
         if not person:
-            person = await self._get_person_from_elastic(person_id)
+            person = await self._get_from_elastic(person_id)
             if not person:
                 return None
-            await self._put_person_to_cache(person)
+            await self._put_instance_to_cache(person)
 
         return person
 
     async def get_by_parameters(
         self,
-        search: Optional[str],
         page_number: int,
         page_size: int,
-        sort: str = None,
+        search: str | None,
+        sort: str | None = None,
     ) -> list[Optional[Person]]:
-        persons = await self._get_persons_from_cache(
+        persons = await self._get_list_from_cache(
             search=search,
             page_size=page_size,
             page_number=page_number,
             sort=sort,
         )
         if not persons:
-            persons = await self._get_persons_from_elastic(
+            persons = await self._get_list_from_elastic(
                 search=search,
                 page_number=page_number,
                 page_size=page_size,
@@ -60,7 +57,7 @@ class PersonService:
             )
             if not persons:
                 return []
-            await self._put_persons_to_cache(
+            await self._put_list_to_cache(
                 page_number=page_number,
                 page_size=page_size,
                 sort=sort,
@@ -69,25 +66,22 @@ class PersonService:
 
         return persons
 
-    async def _get_person_from_elastic(
-        self,
-        person_id: str,
-    ) -> Optional[Person]:
+    async def _get_from_elastic(self, person_id: str) -> Optional[Person]:
         try:
             doc = await self.elastic.get(
                 index=self.index,
                 id=person_id,
             )
+            return Person(**doc["_source"])
         except NotFoundError:
             return None
-        return Person(**doc["_source"])
 
-    async def _get_persons_from_elastic(
+    async def _get_list_from_elastic(
         self,
-        search: Optional[str],
         page_number: int,
         page_size: int,
-        sort: str = None,
+        search: str | None,
+        sort: str | None = None,
     ):
         query = {
             "query": {
@@ -104,18 +98,10 @@ class PersonService:
         }
 
         if sort:
-            asc = True
-            if sort.startswith("-"):
-                asc = False
-            sort = [
-                {
-                    "{}{}".format(
-                        sort if asc else sort[1:],
-                        ":asc" if asc else ":desc",
-                    )
-                }
-            ]
-            query["sort"] = sort
+            (sort_key, sort_order,) = (
+                (sort[1:], "desc") if sort.startswith("-") else (sort, "asc")
+            )
+            query["sort"] = [{sort_key: sort_order}]
 
         try:
             doc = await self.elastic.search(
@@ -124,25 +110,23 @@ class PersonService:
             )
         except NotFoundError:
             return None
-        persons = [Person.model_validate(doc["_source"]) for doc in doc["hits"]["hits"]]
+        documents = doc["hits"]["hits"]
+        persons = [Person.model_validate(doc["_source"]) for doc in documents]
         return persons
 
-    async def _person_from_cache(
-        self,
-        person_id: str,
-    ) -> Optional[Person]:
-        cache_key = f"{self.redis_prefix_single}_{person_id}"
+    async def _get_from_cache(self, instance_id: str) -> Optional[Person]:
+        cache_key = f"{self.redis_prefix_single}_{instance_id}"
         data = await self.redis.get(cache_key)
         if not data:
             return None
         return Person.model_validate(orjson.loads(data))
 
-    async def _get_persons_from_cache(
+    async def _get_list_from_cache(
         self,
-        search: Optional[str],
+        search: str | None,
         page_size: int,
         page_number: int,
-        sort: str = None,
+        sort: str | None = None,
     ):
         cache_key = f"{self.redis_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
 
@@ -155,10 +139,7 @@ class PersonService:
 
         return persons
 
-    async def _put_person_to_cache(
-        self,
-        person: Person,
-    ):
+    async def _put_instance_to_cache(self, person: Person):
         cache_key = f"{self.redis_prefix_single}_{person.id}"
         await self.redis.set(
             cache_key,
@@ -166,7 +147,7 @@ class PersonService:
             settings.cache_expire_time,
         )
 
-    async def _put_persons_to_cache(
+    async def _put_list_to_cache(
         self,
         sort: str,
         page_size: int,
