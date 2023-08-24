@@ -26,9 +26,9 @@ class CachableService(Generic[T]):
 
     async def _get_list_from_cache(
         self,
-        search: str | None,
         page_size: int,
         page_number: int,
+        search: str | None = None,
         sort: str | None = None,
     ) -> List[T]:
         cache_key = f"{self.redis_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
@@ -51,7 +51,7 @@ class CachableService(Generic[T]):
         page_size: int,
         page_number: int,
         instances: List[T],
-        search: str,
+        search: str | None = None,
     ):
         cache_key = f"{self.redis_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
         instances_json_list = [self._dump_instance_to_json(instance) for instance in instances]
