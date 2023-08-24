@@ -13,19 +13,20 @@ from pydantic import BaseModel
 T = TypeVar("T", bound=BaseModel)
 
 
-class CachableService(Generic[T]):
-    redis_prefix_single: str
-    redis_prefix_plural: str
-    redis: CacheStorageProtocol
+class CachingService(Generic[T]):
+    def __init__(self, redis: CacheStorageProtocol, prefix_plural: str, prefix_single: str):
+        self.redis = redis
+        self.redis_prefix_plural = prefix_plural
+        self.redis_prefix_single = prefix_single
 
-    async def _get_instance_from_cache(self, instance_id: str) -> Optional[T]:
+    async def get_instance_from_cache(self, instance_id: str) -> Optional[T]:
         cache_key = f"{self.redis_prefix_single}_{instance_id}"
         data = await self.redis.get(cache_key)
         if not data:
             return None
         return self._parse_instance_from_data(data)
 
-    async def _get_list_from_cache(
+    async def get_list_from_cache(
         self,
         page_size: int,
         page_number: int,
@@ -39,7 +40,7 @@ class CachableService(Generic[T]):
         items = orjson.loads(data)
         return [self._parse_instance_from_data(item) for item in items]
 
-    async def _put_instance_to_cache(self, instance: T):
+    async def put_instance_to_cache(self, instance: T):
         cache_key = f"{self.redis_prefix_single}_{instance.id}"
         await self.redis.set(
             cache_key,
@@ -47,7 +48,7 @@ class CachableService(Generic[T]):
             settings.cache_expire_time,
         )
 
-    async def _put_list_to_cache(
+    async def put_list_to_cache(
         self,
         sort: str,
         page_size: int,
@@ -69,19 +70,19 @@ class CachableService(Generic[T]):
         raise NotImplementedError
 
 
-class FilmCachableService(CachableService[Film]):
+class FilmCachingService(CachingService[Film]):
     def _parse_instance_from_data(self, data: str) -> Film:
         # data_dict = json.loads(data)
         return Film.parse_from_redis(data)
 
 
-class PersonCachableService(CachableService[Person]):
+class PersonCachingService(CachingService[Person]):
     def _parse_instance_from_data(self, data: str) -> Person:
         data_dict = json.loads(data)
         return Person.model_validate(data_dict)
 
 
-class GenreCachableService(CachableService[Genre]):
+class GenreCachingService(CachingService[Genre]):
     def _parse_instance_from_data(self, data: str) -> Genre:
         data_dict = json.loads(data)
         return Genre.model_validate(data_dict)
