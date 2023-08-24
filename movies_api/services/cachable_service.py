@@ -71,8 +71,8 @@ class CachableService(Generic[T]):
 
 class FilmCachableService(CachableService[Film]):
     def _parse_instance_from_data(self, data: str) -> Film:
-        data_dict = json.loads(data)
-        return Film.parse_from_redis(data_dict)
+        # data_dict = json.loads(data)
+        return Film.parse_from_redis(data)
 
 
 class PersonCachableService(CachableService[Person]):
