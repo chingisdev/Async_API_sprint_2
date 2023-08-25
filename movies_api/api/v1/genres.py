@@ -3,7 +3,9 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.genre import Genre
-from services.genre import GenreService, get_genre_service
+from services.genre import get_genre_service
+
+from .service_protocol import ModelServiceProtocol
 
 router = APIRouter()
 
@@ -31,9 +33,9 @@ async def genre_details_list(
         ge=1,
         description="Page number",
     ),
-    genre_service: GenreService = Depends(get_genre_service),
+    model_service: ModelServiceProtocol[Genre] = Depends(get_genre_service),
 ) -> List[Genre]:
-    genres = await genre_service.filter(
+    genres = await model_service.get_many_by_parameters(
         search=search,
         page_number=page_number,
         page_size=page_size,
@@ -50,9 +52,9 @@ async def genre_details_list(
 )
 async def genre_details(
     genre_id: str,
-    genre_service: GenreService = Depends(get_genre_service),
+    model_service: ModelServiceProtocol[Genre] = Depends(get_genre_service),
 ) -> Genre:
-    genre = await genre_service.get_by_id(genre_id)
+    genre = await model_service.get_by_id(genre_id)
     if not genre:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,

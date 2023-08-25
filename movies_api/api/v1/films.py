@@ -4,7 +4,9 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from models.film import Film
 from models.sort import MoviesSortOptions
-from services.film import FilmService, get_film_service
+from services.film import get_film_service
+
+from .service_protocol import ModelServiceProtocol
 
 router = APIRouter()
 
@@ -36,9 +38,9 @@ async def film_details_list(
         ge=1,
         description="Page number",
     ),
-    film_service: FilmService = Depends(get_film_service),
+    model_service: ModelServiceProtocol[Film] = Depends(get_film_service),
 ) -> List[Film]:
-    films = await film_service.get_many_by_parameters(
+    films = await model_service.get_many_by_parameters(
         search=search,
         page_number=page_number,
         page_size=page_size,
@@ -55,9 +57,9 @@ async def film_details_list(
 )
 async def film_details(
     film_id: str,
-    film_service: FilmService = Depends(get_film_service),
+    model_service: ModelServiceProtocol[Film] = Depends(get_film_service),
 ) -> Film:
-    film = await film_service.get_by_id(film_id)
+    film = await model_service.get_by_id(film_id)
     if not film:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
