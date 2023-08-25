@@ -3,6 +3,7 @@ from abc import abstractmethod
 from typing import Generic, List, Optional, TypeVar
 
 import orjson
+from backoff.backoff import backoff_public_methods
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
 from core.config import settings
 from models.film import Film
@@ -13,6 +14,7 @@ from pydantic import BaseModel
 T = TypeVar("T", bound=BaseModel)
 
 
+@backoff_public_methods()
 class CachingService(Generic[T]):
     def __init__(self, cache_storage: CacheStorageProtocol, prefix_plural: str, prefix_single: str):
         self.cache_storage = cache_storage

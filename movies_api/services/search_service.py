@@ -1,5 +1,6 @@
 from typing import Generic, List, Optional, TypeVar
 
+from backoff.backoff import backoff_public_methods
 from elasticsearch import NotFoundError
 from models.film import Film
 from models.genre import Genre
@@ -10,6 +11,7 @@ from search_engine.search_engine_protocol import SearchEngineProtocol
 T = TypeVar("T", bound=BaseModel)
 
 
+@backoff_public_methods()
 class SearchService(Generic[T]):
     def __init__(self, search_engine: SearchEngineProtocol, index: str):
         self.search_engine = search_engine
@@ -18,7 +20,7 @@ class SearchService(Generic[T]):
     async def get_by_id(self, instance_id: str) -> Optional[T]:
         try:
             doc = await self.search_engine.get(index=self.index, id=instance_id)
-            return self.deserialize(doc)
+            return self._deserialize(doc)
         except NotFoundError:
             return None
 
@@ -53,22 +55,22 @@ class SearchService(Generic[T]):
         except NotFoundError:
             return None
         documents = doc["hits"]["hits"]
-        return [self.deserialize(doc) for doc in documents]
+        return [self._deserialize(doc) for doc in documents]
 
-    def deserialize(self, data):
+    def _deserialize(self, data):
         raise NotImplementedError("Subclasses must implement this method")
 
 
 class FilmSearchService(SearchService[Film]):
-    def deserialize(self, data):
+    def _deserialize(self, data):
         return Film.deserialize_search(data)
 
 
 class GenreSearchService(SearchService[Genre]):
-    def deserialize(self, data):
+    def _deserialize(self, data):
         return Genre.model_validate(data["_source"])
 
 
 class PersonSearchService(SearchService[Person]):
-    def deserialize(self, data):
+    def _deserialize(self, data):
         return Person.model_validate(data["_source"])
