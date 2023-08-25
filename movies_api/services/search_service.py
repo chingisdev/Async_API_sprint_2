@@ -28,24 +28,13 @@ class SearchService(Generic[T]):
         self, page_number: int, page_size: int, search: str | None = None, sort: str | None = None
     ) -> Optional[List[T]]:
         query = {
-            "query": {
-                "multi_match": {
-                    "query": search,
-                    "fields": ["*"],
-                    "fuzziness": "AUTO",
-                }
-            }
-            if search
-            else {"match_all": {}},
+            "query": self._get_query_match(search=search),
             "size": page_size,
             "from": (page_number - 1) * page_size,
         }
 
         if sort:
-            (sort_key, sort_order,) = (
-                (sort[1:], "desc") if sort.startswith("-") else (sort, "asc")
-            )
-            query["sort"] = [{sort_key: sort_order}]
+            query["sort"] = self._get_sort_params(sort=sort)
 
         try:
             doc = await self.search_engine.search(
@@ -56,6 +45,25 @@ class SearchService(Generic[T]):
             return None
         documents = doc["hits"]["hits"]
         return [self._deserialize(doc) for doc in documents]
+
+    @staticmethod
+    def _get_sort_params(sort):
+        (sort_key, sort_order,) = (
+            (sort[1:], "desc") if sort.startswith("-") else (sort, "asc")
+        )
+        return [{sort_key: sort_order}]
+
+    @staticmethod
+    def _get_query_match(search: str | None):
+        if search:
+            return {
+                "multi_match": {
+                    "query": search,
+                    "fields": ["*"],
+                    "fuzziness": "AUTO",
+                }
+            }
+        return {"match_all": {}}
 
     def _deserialize(self, data):
         raise NotImplementedError("Subclasses must implement this method")

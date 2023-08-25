@@ -18,21 +18,9 @@ router = APIRouter()
     response_model=List[Person],
 )
 async def person_details_list(
-    search: str = Query(
-        None,
-        description="Searching text",
-    ),
-    page_size: int = Query(
-        50,
-        ge=1,
-        le=100,
-        description="Number of persons per page",
-    ),
-    page_number: int = Query(
-        1,
-        ge=1,
-        description="Page number",
-    ),
+    search: str = Query(None, description="Searching text"),
+    page_size: int = Query(50, ge=1, le=100, description="Number of persons per page"),
+    page_number: int = Query(1, ge=1, description="Page number"),
     model_service: ModelServiceProtocol[Person] = Depends(get_person_service),
 ) -> List[Person]:
     persons = await model_service.get_many_by_parameters(
@@ -56,9 +44,6 @@ async def person_details(
 ) -> Person:
     person = await model_service.get_by_id(person_id)
     if not person:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail="person not found",
-        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
 
     return person

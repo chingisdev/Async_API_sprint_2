@@ -11,10 +11,7 @@ from psycopg2.extras import DictCursor
 from sqlite_extractor import SQLiteExtractor
 
 
-def load_from_sqlite(
-    sqlite_connection: sqlite3.Connection,
-    postgres_connection: _connection,
-):
+def load_from_sqlite(sqlite_connection: sqlite3.Connection, postgres_connection: _connection):
     try:
         postgres_saver = PostgresSaver(postgres_connection)
         sqlite_extractor = SQLiteExtractor(sqlite_connection)
@@ -39,11 +36,5 @@ if __name__ == "__main__":
     BASE_DIR = Path(__file__).parent.absolute()
     SQLITE_DB_PATH = BASE_DIR / "db.sqlite"
     with create_sqlite_connection(SQLITE_DB_PATH) as sqlite_conn:
-        with create_postgresql_connection(
-            dsl,
-            DictCursor,
-        ) as pg_conn:
-            load_from_sqlite(
-                sqlite_conn,
-                pg_conn,
-            )
+        with create_postgresql_connection(dsl, DictCursor) as pg_conn:
+            load_from_sqlite(sqlite_conn, pg_conn)

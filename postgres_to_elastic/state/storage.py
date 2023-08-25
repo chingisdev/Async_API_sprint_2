@@ -13,17 +13,11 @@ class BaseStorage(ABC):
     """
 
     @abstractmethod
-    def save_state(
-        self,
-        state: Dict[str, Any],
-    ) -> None:
+    def save_state(self, state: Dict[str, Any]) -> None:
         """Save state to the storage."""
 
     @abstractmethod
-    def retrieve_state(
-        self,
-        key: str,
-    ) -> Optional[Any]:
+    def retrieve_state(self, key: str) -> Optional[Any]:
         """Retrieve state from the storage."""
 
 
@@ -32,27 +26,15 @@ class RedisStorage(BaseStorage):
     Storage implementation that uses Redis.
     """
 
-    def __init__(
-        self,
-        redis_adapter: Redis,
-    ) -> None:
+    def __init__(self, redis_adapter: Redis) -> None:
         self.redis_adapter = redis_adapter
 
-    def save_state(
-        self,
-        state: Dict[str, Any],
-    ) -> None:
+    def save_state(self, state: Dict[str, Any]) -> None:
         """Save state to the Redis storage."""
 
-        self.redis_adapter.set(
-            state["key"],
-            state["value"],
-        )
+        self.redis_adapter.set(state["key"], state["value"])
 
-    def retrieve_state(
-        self,
-        key: str,
-    ) -> Optional[Any]:
+    def retrieve_state(self, key: str) -> Optional[Any]:
         """Retrieve state from the Redis storage."""
 
         return self.redis_adapter.get(key)

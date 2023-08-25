@@ -14,8 +14,7 @@ from .searchable_model_service import SearchableModelService
 
 @lru_cache()
 def get_genre_service(
-    redis: CacheStorageProtocol = Depends(get_redis),
-    elastic: SearchEngineProtocol = Depends(get_elastic),
+    redis: CacheStorageProtocol = Depends(get_redis), elastic: SearchEngineProtocol = Depends(get_elastic)
 ) -> SearchableModelService:
     redis = GenreCachingService(cache_storage=redis, prefix_single="genre", prefix_plural="genres")
     elastic = GenreSearchService(search_engine=elastic, index="genres")
