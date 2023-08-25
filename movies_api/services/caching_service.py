@@ -14,14 +14,14 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class CachingService(Generic[T]):
-    def __init__(self, redis: CacheStorageProtocol, prefix_plural: str, prefix_single: str):
-        self.redis = redis
-        self.redis_prefix_plural = prefix_plural
-        self.redis_prefix_single = prefix_single
+    def __init__(self, cache_storage: CacheStorageProtocol, prefix_plural: str, prefix_single: str):
+        self.cache_storage = cache_storage
+        self.key_prefix_plural = prefix_plural
+        self.key_prefix_single = prefix_single
 
     async def get_instance_from_cache(self, instance_id: str) -> Optional[T]:
-        cache_key = f"{self.redis_prefix_single}_{instance_id}"
-        data = await self.redis.get(cache_key)
+        cache_key = f"{self.key_prefix_single}_{instance_id}"
+        data = await self.cache_storage.get(cache_key)
         if not data:
             return None
         return self._parse_instance_from_data(data)
@@ -33,16 +33,16 @@ class CachingService(Generic[T]):
         search: str | None = None,
         sort: str | None = None,
     ) -> List[T]:
-        cache_key = f"{self.redis_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
-        data = await self.redis.get(cache_key)
+        cache_key = f"{self.key_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
+        data = await self.cache_storage.get(cache_key)
         if not data:
             return None
         items = orjson.loads(data)
         return [self._parse_instance_from_data(item) for item in items]
 
     async def put_instance_to_cache(self, instance: T):
-        cache_key = f"{self.redis_prefix_single}_{instance.id}"
-        await self.redis.set(
+        cache_key = f"{self.key_prefix_single}_{instance.id}"
+        await self.cache_storage.set(
             cache_key,
             instance.model_dump_json(),
             settings.cache_expire_time,
@@ -56,10 +56,10 @@ class CachingService(Generic[T]):
         instances: List[T],
         search: str | None = None,
     ):
-        cache_key = f"{self.redis_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
+        cache_key = f"{self.key_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
         instances_json_list = [instance.model_dump_json() for instance in instances]
         instances_json_str = orjson.dumps(instances_json_list)
-        await self.redis.set(
+        await self.cache_storage.set(
             cache_key,
             instances_json_str,
             settings.cache_expire_time,
@@ -72,8 +72,7 @@ class CachingService(Generic[T]):
 
 class FilmCachingService(CachingService[Film]):
     def _parse_instance_from_data(self, data: str) -> Film:
-        # data_dict = json.loads(data)
-        return Film.parse_from_redis(data)
+        return Film.deserialize_cache(data)
 
 
 class PersonCachingService(CachingService[Person]):

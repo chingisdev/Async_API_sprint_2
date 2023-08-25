@@ -8,15 +8,15 @@ from models.genre import Genre
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .caching_service import GenreCachingService
-from .elastic_service import GenreElasticService
-from .search_service import SearchService
+from .elastic_service import GenreSearchService
+from .search_service import SearchableModelService
 
 
 @lru_cache()
 def get_genre_service(
     redis: CacheStorageProtocol = Depends(get_redis),
     elastic: SearchEngineProtocol = Depends(get_elastic),
-) -> SearchService:
-    redis = GenreCachingService(redis=redis, prefix_single="genre", prefix_plural="genres")
-    elastic = GenreElasticService(elastic=elastic, index="genres")
-    return SearchService[Genre](redis=redis, elastic=elastic)
+) -> SearchableModelService:
+    redis = GenreCachingService(cache_storage=redis, prefix_single="genre", prefix_plural="genres")
+    elastic = GenreSearchService(search_engine=elastic, index="genres")
+    return SearchableModelService[Genre](redis=redis, elastic=elastic)

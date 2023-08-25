@@ -9,15 +9,15 @@ from models.person import Person
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .caching_service import PersonCachingService
-from .elastic_service import PersonElasticService
-from .search_service import SearchService
+from .elastic_service import PersonSearchService
+from .search_service import SearchableModelService
 
 
 @lru_cache()
 def get_person_service(
     redis: CacheStorageProtocol = Depends(get_redis),
     elastic: SearchEngineProtocol = Depends(get_elastic),
-) -> SearchService:
-    redis = PersonCachingService(redis=redis, prefix_plural="persons", prefix_single="person")
-    elastic = PersonElasticService(elastic=elastic, index="persons")
-    return SearchService[Person](redis=redis, elastic=elastic)
+) -> SearchableModelService:
+    redis = PersonCachingService(cache_storage=redis, prefix_plural="persons", prefix_single="person")
+    elastic = PersonSearchService(search_engine=elastic, index="persons")
+    return SearchableModelService[Person](redis=redis, elastic=elastic)

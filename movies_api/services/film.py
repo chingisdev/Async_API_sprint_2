@@ -9,14 +9,14 @@ from models.film import Film
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .caching_service import FilmCachingService
-from .elastic_service import FilmElasticService
-from .search_service import SearchService
+from .elastic_service import FilmSearchService
+from .search_service import SearchableModelService
 
 
 @lru_cache()
 def get_film_service(
     redis: CacheStorageProtocol = Depends(get_redis), elastic: SearchEngineProtocol = Depends(get_elastic)
-) -> SearchService:
-    redis = FilmCachingService(redis=redis, prefix_plural="movies", prefix_single="movie")
-    elastic = FilmElasticService(elastic=elastic, index="movies")
-    return SearchService[Film](redis=redis, elastic=elastic)
+) -> SearchableModelService:
+    redis = FilmCachingService(cache_storage=redis, prefix_plural="movies", prefix_single="movie")
+    elastic = FilmSearchService(search_engine=elastic, index="movies")
+    return SearchableModelService[Film](redis=redis, elastic=elastic)

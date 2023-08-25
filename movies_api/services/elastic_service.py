@@ -10,14 +10,14 @@ from search_engine.search_engine_protocol import SearchEngineProtocol
 T = TypeVar("T", bound=BaseModel)
 
 
-class ElasticService(Generic[T]):
-    def __init__(self, elastic: SearchEngineProtocol, index: str):
-        self.elastic = elastic
+class SearchService(Generic[T]):
+    def __init__(self, search_engine: SearchEngineProtocol, index: str):
+        self.search_engine = search_engine
         self.index = index
 
     async def get_by_id(self, instance_id: str) -> Optional[T]:
         try:
-            doc = await self.elastic.get(index=self.index, id=instance_id)
+            doc = await self.search_engine.get(index=self.index, id=instance_id)
             return self.deserialize(doc)
         except NotFoundError:
             return None
@@ -46,7 +46,7 @@ class ElasticService(Generic[T]):
             query["sort"] = [{sort_key: sort_order}]
 
         try:
-            doc = await self.elastic.search(
+            doc = await self.search_engine.search(
                 index=self.index,
                 body=query,
             )
@@ -59,16 +59,16 @@ class ElasticService(Generic[T]):
         raise NotImplementedError("Subclasses must implement this method")
 
 
-class FilmElasticService(ElasticService[Film]):
+class FilmSearchService(SearchService[Film]):
     def deserialize(self, data):
-        return Film.parse_from_elastic(data)
+        return Film.deserialize_search(data)
 
 
-class GenreElasticService(ElasticService[Genre]):
+class GenreSearchService(SearchService[Genre]):
     def deserialize(self, data):
         return Genre.model_validate(data["_source"])
 
 
-class PersonElasticService(ElasticService[Person]):
+class PersonSearchService(SearchService[Person]):
     def deserialize(self, data):
         return Person.model_validate(data["_source"])

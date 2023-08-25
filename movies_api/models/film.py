@@ -30,7 +30,7 @@ class Film(BaseModel):
     genres: list[MovieGenre] | None
 
     @staticmethod
-    def parse_from_elastic(
+    def deserialize_search(
         document,
     ):
         return Film(
@@ -61,7 +61,7 @@ class Film(BaseModel):
         )
 
     @staticmethod
-    def parse_from_redis(
+    def deserialize_cache(
         film_str: str,
     ):
         film = orjson.loads(film_str)
