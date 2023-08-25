@@ -40,7 +40,7 @@ async def film_details_list(
     ),
     model_service: ModelServiceProtocol[Film] = Depends(get_film_service),
 ) -> List[Film]:
-    films = await model_service.get_by_parameters(
+    films = await model_service.get_many_by_parameters(
         search=search,
         page_number=page_number,
         page_size=page_size,

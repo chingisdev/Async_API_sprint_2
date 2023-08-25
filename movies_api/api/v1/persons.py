@@ -35,7 +35,7 @@ async def person_details_list(
     ),
     model_service: ModelServiceProtocol[Person] = Depends(get_person_service),
 ) -> List[Person]:
-    persons = await model_service.get_by_parameters(
+    persons = await model_service.get_many_by_parameters(
         search=search,
         page_number=page_number,
         page_size=page_size,

@@ -35,7 +35,7 @@ async def genre_details_list(
     ),
     model_service: ModelServiceProtocol[Genre] = Depends(get_genre_service),
 ) -> List[Genre]:
-    genres = await model_service.get_by_parameters(
+    genres = await model_service.get_many_by_parameters(
         search=search,
         page_number=page_number,
         page_size=page_size,

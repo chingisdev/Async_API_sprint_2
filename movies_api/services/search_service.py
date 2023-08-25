@@ -22,7 +22,7 @@ class SearchService(Generic[T]):
             await self.redis.put_instance_to_cache(item)
         return item
 
-    async def get_by_parameters(
+    async def get_many_by_parameters(
         self, page_number: int, page_size: int, search: str | None = None, sort: str | None = None
     ) -> list[Optional[T]]:
         items = await self.redis.get_list_from_cache(
