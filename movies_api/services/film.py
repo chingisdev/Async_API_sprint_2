@@ -8,8 +8,8 @@ from models.film import Film
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .caching_service import FilmCachingService
-from .elastic_service import FilmSearchService
-from .search_service import SearchableModelService
+from .search_service import FilmSearchService
+from .searchable_model_service import SearchableModelService
 
 
 @lru_cache()

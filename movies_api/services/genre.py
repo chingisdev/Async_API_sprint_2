@@ -8,8 +8,8 @@ from models.genre import Genre
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .caching_service import GenreCachingService
-from .elastic_service import GenreSearchService
-from .search_service import SearchableModelService
+from .search_service import GenreSearchService
+from .searchable_model_service import SearchableModelService
 
 
 @lru_cache()

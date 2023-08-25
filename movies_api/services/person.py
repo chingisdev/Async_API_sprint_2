@@ -9,8 +9,8 @@ from models.person import Person
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .caching_service import PersonCachingService
-from .elastic_service import PersonSearchService
-from .search_service import SearchableModelService
+from .search_service import PersonSearchService
+from .searchable_model_service import SearchableModelService
 
 
 @lru_cache()
