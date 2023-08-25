@@ -9,9 +9,9 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class SearchableModelService(Generic[T]):
-    def __init__(self, caching_service: CachingService, elastic_service: SearchService):
+    def __init__(self, caching_service: CachingService, search_service: SearchService):
         self.cache = caching_service
-        self.search = elastic_service
+        self.search = search_service
 
     async def get_by_id(self, film_id: str) -> Optional[T]:
         item = await self.cache.get_instance_from_cache(film_id)

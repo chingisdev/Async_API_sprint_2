@@ -19,4 +19,4 @@ def get_genre_service(
 ) -> SearchableModelService:
     redis = GenreCachingService(cache_storage=redis, prefix_single="genre", prefix_plural="genres")
     elastic = GenreSearchService(search_engine=elastic, index="genres")
-    return SearchableModelService[Genre](redis=redis, elastic=elastic)
+    return SearchableModelService[Genre](caching_service=redis, search_service=elastic)

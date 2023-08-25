@@ -20,4 +20,4 @@ def get_person_service(
 ) -> SearchableModelService:
     redis = PersonCachingService(cache_storage=redis, prefix_plural="persons", prefix_single="person")
     elastic = PersonSearchService(search_engine=elastic, index="persons")
-    return SearchableModelService[Person](redis=redis, elastic=elastic)
+    return SearchableModelService[Person](caching_service=redis, search_service=elastic)

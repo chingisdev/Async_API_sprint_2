@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Optional
 
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
 from db.elastic import get_elastic
@@ -19,4 +18,4 @@ def get_film_service(
 ) -> SearchableModelService:
     redis = FilmCachingService(cache_storage=redis, prefix_plural="movies", prefix_single="movie")
     elastic = FilmSearchService(search_engine=elastic, index="movies")
-    return SearchableModelService[Film](redis=redis, elastic=elastic)
+    return SearchableModelService[Film](caching_service=redis, search_service=elastic)
