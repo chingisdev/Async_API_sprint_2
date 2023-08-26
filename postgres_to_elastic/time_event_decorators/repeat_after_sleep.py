@@ -3,9 +3,7 @@ import time
 from datetime import datetime, timedelta
 
 
-def repeat_after_sleep(
-    f,
-):
+def repeat_after_sleep(f):
     def wrapper(*args, **kwargs):
         result = f(*args, **kwargs)
 

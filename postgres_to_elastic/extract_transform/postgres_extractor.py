@@ -11,11 +11,7 @@ from .query_manager import PostgresTableName, QueryManager
 
 
 class IExtractor:
-    def extract(
-        self,
-        table_names: List[str],
-        boundaries: DateBoundaries,
-    ) -> Iterable:
+    def extract(self, table_names: List[str], boundaries: DateBoundaries) -> Iterable:
         pass
 
 
@@ -32,10 +28,7 @@ class TableQuery(Enum):
 
 
 @backoff_public_methods()
-class PostgresReceiver(
-    IExtractor,
-    ITransformer,
-):
+class PostgresReceiver(IExtractor, ITransformer):
     def __init__(
         self,
         index: ElasticIndexName,
@@ -50,11 +43,7 @@ class PostgresReceiver(
         self.batch_size = batch_size
         self.engine = create_engine(database_url)
 
-    def extract(
-        self,
-        table_names: List[PostgresTableName],
-        boundaries: DateBoundaries,
-    ) -> Iterable:
+    def extract(self, table_names: List[PostgresTableName], boundaries: DateBoundaries) -> Iterable:
         unique_target_ids = set()
         for table_name in table_names:
             (query, params,) = self.query_manager.build_extract_query(
@@ -64,19 +53,13 @@ class PostgresReceiver(
             )
             if not query or not params:
                 continue
-            ids = self._get_ids(
-                query,
-                params,
-            )
+            ids = self._get_ids(query, params)
             unique_target_ids.update(ids)
         return list(unique_target_ids)
 
     def transform(self, ids) -> Iterable:
         query = self.query_manager.get_transform_query()
-        result = self._fetch_batching(
-            query,
-            ids,
-        )
+        result = self._fetch_batching(query, ids)
         return self._transform_to_schema(result)
 
     def _transform_to_schema(self, rows):
@@ -93,11 +76,7 @@ class PostgresReceiver(
             schema_instances.append(row_dict)
         return schema_instances
 
-    def _fetch_batching(
-        self,
-        query,
-        to_batch,
-    ):
+    def _fetch_batching(self, query, to_batch):
         with self.engine.connect() as connection:
             all_rows = []
             offset = 0
@@ -115,36 +94,20 @@ class PostgresReceiver(
                 offset += self.batch_size
             return all_rows
 
-    def get_transformed_ids(
-        self,
-        table_names: List[PostgresTableName],
-        boundaries: Optional[DateBoundaries],
-    ):
-        ids_to_transform = self.extract(
-            table_names,
-            boundaries,
-        )
+    def get_transformed_ids(self, table_names: List[PostgresTableName], boundaries: Optional[DateBoundaries]):
+        ids_to_transform = self.extract(table_names, boundaries)
         transformed = self.transform(ids=ids_to_transform)
         return transformed
 
-    def get_minimal_update_time(
-        self,
-    ):
+    def get_minimal_update_time(self):
         # query = self.table_queries[TableQuery.GET_EARLIEST_UPDATE_TIME]
         query = self.query_manager.get_earliest_update_query()
         with self.engine.connect() as connection:
             result = connection.execute(text(query)).fetchone()
             return result[0]
 
-    def _get_ids(
-        self,
-        query,
-        params: dict,
-    ):
-        rows = self._execute_sql_query(
-            query,
-            params,
-        )
+    def _get_ids(self, query, params: dict):
+        rows = self._execute_sql_query(query, params)
         return [row[0] for row in rows]
 
     def _fetch_many(self, cursor) -> list:
@@ -153,11 +116,7 @@ class PostgresReceiver(
             data.extend(batch)
         return data
 
-    def _execute_sql_query(
-        self,
-        query: str,
-        params: dict,
-    ):
+    def _execute_sql_query(self, query: str, params: dict):
         with self.engine.connect() as connection:
             data = []
             result = connection.execution_options(stream_results=True).execute(

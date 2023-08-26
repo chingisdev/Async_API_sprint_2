@@ -15,8 +15,7 @@ from .searchable_model_service import SearchableModelService
 
 @lru_cache()
 def get_person_service(
-    redis: CacheStorageProtocol = Depends(get_redis),
-    elastic: SearchEngineProtocol = Depends(get_elastic),
+    redis: CacheStorageProtocol = Depends(get_redis), elastic: SearchEngineProtocol = Depends(get_elastic)
 ) -> SearchableModelService:
     redis = PersonCachingService(cache_storage=redis, prefix_plural="persons", prefix_single="person")
     elastic = PersonSearchService(search_engine=elastic, index="persons")

@@ -6,9 +6,7 @@ import psycopg2
 
 
 @contextmanager
-def create_sqlite_connection(
-    database_path: Path,
-):
+def create_sqlite_connection(database_path: Path):
     sqlite_connection = sqlite3.connect(
         database_path,
         detect_types=sqlite3.PARSE_COLNAMES,
@@ -19,10 +17,7 @@ def create_sqlite_connection(
 
 
 @contextmanager
-def create_postgresql_connection(
-    credentials: dict,
-    cursor_class,
-):
+def create_postgresql_connection(credentials: dict, cursor_class):
     pg_connection = psycopg2.connect(**credentials, cursor_factory=cursor_class)
     yield pg_connection
     pg_connection.close()
