@@ -1,0 +1,6 @@
+pytest
+pytest-asyncio
+aiohttp
+elasticsearch
+pydantic
+pydantic_settings
