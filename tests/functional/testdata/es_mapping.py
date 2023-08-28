@@ -1,4 +1,39 @@
 ELASTIC_MAPS = {
+    "genres": {
+        "dynamic": "strict",
+        "properties": {
+            "id": {"type": "keyword"},
+            "name": {
+                "type": "text",
+                "analyzer": "ru_en",
+            },
+            "description": {
+                "type": "text",
+                "analyzer": "ru_en",
+            },
+        },
+    },
+    "persons": {
+        "dynamic": "strict",
+        "properties": {
+            "id": {"type": "keyword"},
+            "full_name": {
+                "type": "text",
+                "analyzer": "ru_en",
+            },
+            "films": {
+                "type": "nested",
+                "dynamic": "strict",
+                "properties": {
+                    "id": {"type": "keyword"},
+                    "roles": {
+                        "type": "text",
+                        "analyzer": "ru_en",
+                    },
+                },
+            },
+        },
+    },
     "movies": {
         "dynamic": "strict",
         "properties": {
@@ -49,7 +84,7 @@ ELASTIC_MAPS = {
                 },
             },
         },
-    }
+    },
 }
 ELASTIC_INDEX_SETTINGS = {
     "refresh_interval": "1s",

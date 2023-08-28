@@ -16,7 +16,7 @@ class TestSettings(BaseSettings):
     es_maps: dict = ELASTIC_MAPS
 
     service_host: str = Field("127.0.0.1")
-    service_port: str | int = Field(80)
+    service_port: str | int = Field(8000)
 
     @property
     def elastic_url(self):

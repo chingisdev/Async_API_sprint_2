@@ -3,7 +3,6 @@ from typing import List
 
 import aiohttp
 import pytest
-import pytest_asyncio
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 
@@ -14,56 +13,57 @@ def get_es_actions(data: List[dict], index: str):
     return [{"_index": index, "_source": doc} for doc in data]
 
 
-@pytest.fixture(scope="session")
-async def aiohttp_client():
-    session = aiohttp.ClientSession()
-    yield session
-    await session.close()
-
-
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def es_client():
     client = AsyncElasticsearch(hosts=test_settings.elastic_url)
-    yield client
-    await client.close()
+    try:
+        yield client
+    finally:
+        await client.close()
 
 
 @pytest.fixture
-def es_write_data(es_client: AsyncElasticsearch):
-    async def inner(data: List[dict], es_index):
+def es_write_data(es_client):
+    async def inner(data: List[dict], es_index: str):
         actions = get_es_actions(data, es_index)
+        _es_client = (item async for item in es_client)
+        async for client in es_client:
+            client: AsyncElasticsearch
+            index_exists = await client.indices.exists(index=es_index)
+            if index_exists:
+                await client.indices.delete(index=es_index)
 
-        # Looking for index
-        index_exists = await es_client.indices.exists(index=es_index)
+            if test_settings.es_maps.get(es_index) is None:
+                raise Exception(f"Mapping for index '{es_index}' not found")
 
-        if index_exists:
-            await es_client.indices.delete(index=es_index)
+            await client.indices.create(
+                index=es_index, mappings=test_settings.es_maps.get(es_index), settings=test_settings.es_index_mapping
+            )
 
-        if test_settings.es_maps.get(es_index) is None:
-            raise Exception("Mapping for index <<%s>> not Found ", es_index)
+            await async_bulk(client, actions)
 
-        await es_client.indices.create(
-            index=es_index, mappings=test_settings.es_mapps.get(es_index), settings=test_settings.es_index_mapping
-        )
-
-        await async_bulk(es_client, actions)
-        await es_client.close()
+            await client.indices.refresh(index=es_index)
 
     return inner
 
 
 @pytest.fixture
-async def make_get_request(aiohttp_client: aiohttp.ClientSession):
+def make_get_request():
     async def inner(endpoint: str, params: dict):
         base_url = test_settings.service_url + endpoint
         encoded_params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
 
         url = f"{base_url}?{encoded_params}"
+        aiohttp_client = aiohttp.ClientSession()
 
-        async with aiohttp_client.get(url) as response:
-            body = await response.json()
-            status = response.status
+        try:
+            async with aiohttp_client.get(url) as response:
+                print(response.url)
+                body = await response.json()
+                status = response.status
 
-        return status, body
+            return status, body
+        finally:
+            await aiohttp_client.close()
 
     return inner
