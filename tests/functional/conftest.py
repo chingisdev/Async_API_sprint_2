@@ -10,7 +10,7 @@ from .settings import test_settings
 
 
 def get_es_actions(data: List[dict], index: str):
-    return [{"_index": index, "_source": doc} for doc in data]
+    return [{"_index": index, "_source": doc, "_id": doc["id"]} for doc in data]
 
 
 @pytest.fixture
@@ -49,16 +49,16 @@ def es_write_data(es_client):
 
 @pytest.fixture
 def make_get_request():
-    async def inner(endpoint: str, params: dict):
-        base_url = test_settings.service_url + endpoint
-        encoded_params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
+    async def inner(endpoint: str, params: dict = None):
+        url = test_settings.service_url + endpoint
 
-        url = f"{base_url}?{encoded_params}"
+        if params:
+            encoded_params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
+            url = f"{url}?{encoded_params}"
         aiohttp_client = aiohttp.ClientSession()
 
         try:
             async with aiohttp_client.get(url) as response:
-                print(response.url)
                 body = await response.json()
                 status = response.status
 
