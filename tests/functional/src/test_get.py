@@ -1,4 +1,9 @@
 import pytest
+from functional.testdata.data_generator import (
+    generate_single_film,
+    generate_single_genre,
+    generate_single_person,
+)
 
 
 @pytest.mark.parametrize(
@@ -10,18 +15,7 @@ import pytest
 )
 @pytest.mark.asyncio
 async def test_get_film(make_get_request, es_write_data, search_data: dict, expected_answer: dict):
-    es_data = [
-        {
-            "id": "accb643b-db2c-4f5b-b59b-e9727bb5e859",
-            "imdb_rating": 8.5,
-            "genre": ["Action", "Sci-Fi"],
-            "title": "The Star",
-            "description": "New World",
-            "director": ["Stan"],
-            "actors": [{"id": "111", "name": "Ann"}, {"id": "222", "name": "Bob"}],
-            "writers": [{"id": "333", "name": "Ben"}, {"id": "444", "name": "Howard"}],
-        }
-    ]
+    es_data = generate_single_film(search_data.get("film_id"))
 
     await es_write_data(es_data, "movies")
 
@@ -39,13 +33,7 @@ async def test_get_film(make_get_request, es_write_data, search_data: dict, expe
 )
 @pytest.mark.asyncio
 async def test_get_genres(make_get_request, es_write_data, search_data: dict, expected_answer: dict):
-    es_data = [
-        {
-            "id": "145acdf0-d0ff-4bac-8169-2dac732290f5",
-            "name": "Horror",
-            "description": "New World",
-        }
-    ]
+    es_data = generate_single_genre(search_data.get("genre_id"))
 
     await es_write_data(es_data, "genres")
 
@@ -63,13 +51,7 @@ async def test_get_genres(make_get_request, es_write_data, search_data: dict, ex
 )
 @pytest.mark.asyncio
 async def test_get_persons(make_get_request, es_write_data, search_data: dict, expected_answer: dict):
-    es_data = [
-        {
-            "id": "5c332d8a-4691-41bd-b5c8-028018a17461",
-            "full_name": "Bahrom",
-            "films": [{"id": "1111", "roles": ["actor", "writer"]}, {"id": "2222", "roles": ["actor", "writer"]}],
-        }
-    ]
+    es_data = generate_single_person(search_data.get("person_id"))
 
     await es_write_data(es_data, "persons")
 

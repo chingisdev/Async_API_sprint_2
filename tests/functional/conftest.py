@@ -16,10 +16,8 @@ def get_es_actions(data: List[dict], index: str):
 @pytest.fixture
 async def es_client():
     client = AsyncElasticsearch(hosts=test_settings.elastic_url)
-    try:
-        yield client
-    finally:
-        await client.close()
+    yield client
+    await client.close()
 
 
 @pytest.fixture

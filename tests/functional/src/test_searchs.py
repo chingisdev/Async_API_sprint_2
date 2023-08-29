@@ -1,6 +1,11 @@
 import uuid
 
 import pytest
+from functional.testdata.data_generator import (
+    generate_films,
+    generate_genres,
+    generate_persons,
+)
 
 
 @pytest.mark.parametrize(
@@ -12,19 +17,7 @@ import pytest
 )
 @pytest.mark.asyncio
 async def test_search_film(make_get_request, es_write_data, search_data: dict, expected_answer: dict):
-    es_data = [
-        {
-            "id": str(uuid.uuid4()),
-            "imdb_rating": 8.5,
-            "genre": ["Action", "Sci-Fi"],
-            "title": "The Star",
-            "description": "New World",
-            "director": ["Stan"],
-            "actors": [{"id": "111", "name": "Ann"}, {"id": "222", "name": "Bob"}],
-            "writers": [{"id": "333", "name": "Ben"}, {"id": "444", "name": "Howard"}],
-        }
-        for _ in range(60)
-    ]
+    es_data = generate_films(60)
 
     await es_write_data(es_data, "movies")
 
@@ -43,14 +36,7 @@ async def test_search_film(make_get_request, es_write_data, search_data: dict, e
 )
 @pytest.mark.asyncio
 async def test_search_genres(make_get_request, es_write_data, search_data: dict, expected_answer: dict):
-    es_data = [
-        {
-            "id": str(uuid.uuid4()),
-            "name": "Horror",
-            "description": "New World",
-        }
-        for _ in range(24)
-    ]
+    es_data = generate_genres(24, "Horror", "Scaring movies collection")
 
     await es_write_data(es_data, "genres")
 
@@ -70,14 +56,7 @@ async def test_search_genres(make_get_request, es_write_data, search_data: dict,
 )
 @pytest.mark.asyncio
 async def test_search_persons(make_get_request, es_write_data, search_data: dict, expected_answer: dict):
-    es_data = [
-        {
-            "id": str(uuid.uuid4()),
-            "full_name": "Bahrom",
-            "films": [{"id": "1111", "roles": ["actor", "writer"]}, {"id": "2222", "roles": ["actor", "writer"]}],
-        }
-        for _ in range(32)
-    ]
+    es_data = generate_persons(32, "Bahrom")
 
     await es_write_data(es_data, "persons")
 
