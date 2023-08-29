@@ -1,7 +1,7 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
-from .testdata.es_mapping import ELASTIC_INDEX_SETTINGS
+from .testdata.es_mapping import ELASTIC_INDEX_SETTINGS, ELASTIC_MAPS
 
 
 class TestSettings(BaseSettings):
@@ -12,10 +12,11 @@ class TestSettings(BaseSettings):
     elastic_port: int = Field(9200)
     elastic_schema: str = Field("http")
 
-    es_index_mapping: dict | None = ELASTIC_INDEX_SETTINGS
+    es_index_mapping: dict = ELASTIC_INDEX_SETTINGS
+    es_maps: dict = ELASTIC_MAPS
 
-    service_host: str = Field()
-    service_port: str = Field()
+    service_host: str = Field("127.0.0.1")
+    service_port: str | int = Field(8000)
 
     @property
     def elastic_url(self):

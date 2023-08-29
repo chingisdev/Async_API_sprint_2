@@ -1,27 +1,69 @@
+import urllib
 from typing import List
 
+import aiohttp
 import pytest
 from elasticsearch import AsyncElasticsearch
+from elasticsearch.helpers import async_bulk
 
 from .settings import test_settings
 
 
-@pytest.fixture(scope="session")
+def get_es_actions(data: List[dict], index: str):
+    return [{"_index": index, "_source": doc} for doc in data]
+
+
+@pytest.fixture
 async def es_client():
     client = AsyncElasticsearch(hosts=test_settings.elastic_url)
-    yield client
-    await client.close()
+    try:
+        yield client
+    finally:
+        await client.close()
 
 
 @pytest.fixture
 def es_write_data(es_client):
-    async def inner(data: List[dict]):
-        bulk_query = get_es_bulk_query(data, test_settings.es_index, test_settings.es_id_field)
-        str_query = "\n".join(bulk_query) + "\n"
+    async def inner(data: List[dict], es_index: str):
+        actions = get_es_actions(data, es_index)
+        _es_client = (item async for item in es_client)
+        async for client in es_client:
+            client: AsyncElasticsearch
+            index_exists = await client.indices.exists(index=es_index)
+            if index_exists:
+                await client.indices.delete(index=es_index)
 
-        response = await es_client.bulk(str_query, refresh=True)
-        await es_client.close()
-        if response["errors"]:
-            raise Exception("Ошибка записи данных в Elasticsearch")
+            if test_settings.es_maps.get(es_index) is None:
+                raise Exception(f"Mapping for index '{es_index}' not found")
+
+            await client.indices.create(
+                index=es_index, mappings=test_settings.es_maps.get(es_index), settings=test_settings.es_index_mapping
+            )
+
+            await async_bulk(client, actions)
+
+            await client.indices.refresh(index=es_index)
+
+    return inner
+
+
+@pytest.fixture
+def make_get_request():
+    async def inner(endpoint: str, params: dict):
+        base_url = test_settings.service_url + endpoint
+        encoded_params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
+
+        url = f"{base_url}?{encoded_params}"
+        aiohttp_client = aiohttp.ClientSession()
+
+        try:
+            async with aiohttp_client.get(url) as response:
+                print(response.url)
+                body = await response.json()
+                status = response.status
+
+            return status, body
+        finally:
+            await aiohttp_client.close()
 
     return inner
