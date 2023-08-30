@@ -1,7 +1,6 @@
-import uuid
-
 import pytest
-from functional.testdata.data_generator import (
+
+from tests.functional.testdata.data_generator import (
     generate_films,
     generate_genres,
     generate_persons,
