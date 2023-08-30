@@ -10,7 +10,6 @@ from elasticsearch.helpers import async_bulk
 
 from .settings import test_settings
 
-
 def get_es_actions(data: List[dict], index: str) -> list[dict]:
     return [{"_index": index, "_source": doc, "_id": doc["id"]} for doc in data]
 
