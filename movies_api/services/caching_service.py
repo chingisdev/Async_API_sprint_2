@@ -11,7 +11,11 @@ T = TypeVar("T", bound=BaseModel)
 
 class AbsractCache(ABC, Generic[T]):
     def __init__(
-        self, cache_storage: CacheStorageProtocol, prefix_plural: str, prefix_single: str, deserialize: Callable
+        self,
+        cache_storage: CacheStorageProtocol,
+        prefix_plural: str,
+        prefix_single: str,
+        deserialize: Callable[[dict | str], T],
     ):
         self.cache_storage = cache_storage
         self.key_prefix_plural = prefix_plural
@@ -48,7 +52,7 @@ class AbsractCache(ABC, Generic[T]):
         raise NotImplementedError
 
 
-class RedisCache(AbsractCache[T]):
+class RedisCache(AbsractCache):
     async def get_instance_from_cache(self, instance_id: str) -> Optional[T]:
         cache_key = f"{self.key_prefix_single}_{instance_id}"
         data = await self.cache_storage.get(cache_key)
