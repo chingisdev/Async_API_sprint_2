@@ -7,7 +7,7 @@ from fastapi import Depends
 from models.genre import Genre
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
-from .caching_service import GenreRedisCache
+from .caching_service import RedisCache, automatic_cache_deserializer
 from .search_service import ElasticSearchService, auto_deserializer
 from .searchable_model_service import SearchableModelService
 
@@ -17,6 +17,11 @@ def get_genre_service(
     redis: CacheStorageProtocol = Depends(get_redis),
     elastic: SearchEngineProtocol = Depends(get_elastic),
 ) -> SearchableModelService:
-    redis = GenreRedisCache(cache_storage=redis, prefix_single="genre", prefix_plural="genres")
+    redis = RedisCache(
+        cache_storage=redis,
+        prefix_single="genre",
+        prefix_plural="genres",
+        deserialize=partial(automatic_cache_deserializer, Genre),
+    )
     elastic = ElasticSearchService(search_engine=elastic, index="genres", deserialize=partial(auto_deserializer, Genre))
     return SearchableModelService[Genre](caching_service=redis, search_service=elastic)

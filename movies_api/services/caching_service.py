@@ -1,6 +1,6 @@
 import json
 from abc import ABC, abstractmethod
-from typing import Generic, List, Optional, TypeVar
+from typing import Callable, Generic, List, Optional, Type, TypeVar
 
 import orjson
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
@@ -14,10 +14,13 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class AbsractCache(ABC, Generic[T]):
-    def __init__(self, cache_storage: CacheStorageProtocol, prefix_plural: str, prefix_single: str):
+    def __init__(
+        self, cache_storage: CacheStorageProtocol, prefix_plural: str, prefix_single: str, deserialize: Callable
+    ):
         self.cache_storage = cache_storage
         self.key_prefix_plural = prefix_plural
         self.key_prefix_single = prefix_single
+        self._deserialize = deserialize
 
     @abstractmethod
     async def get_instance_from_cache(self, instance_id: str) -> Optional[T]:
@@ -55,7 +58,7 @@ class RedisCache(AbsractCache[T]):
         data = await self.cache_storage.get(cache_key)
         if not data:
             return None
-        return self._parse_instance_from_data(data)
+        return self._deserialize(data)
 
     async def get_list_from_cache(
         self,
@@ -69,7 +72,7 @@ class RedisCache(AbsractCache[T]):
         if not data:
             return None
         items = orjson.loads(data)
-        return [self._parse_instance_from_data(item) for item in items]
+        return [self._deserialize(item) for item in items]
 
     async def put_instance_to_cache(self, instance: T):
         cache_key = f"{self.key_prefix_single}_{instance.id}"
@@ -96,23 +99,24 @@ class RedisCache(AbsractCache[T]):
             settings.cache_expire_time,
         )
 
-    @abstractmethod
-    def _parse_instance_from_data(self, data: str) -> T:
-        raise NotImplementedError
+
+def automatic_cache_deserializer(model: Type[T], data: str) -> T:
+    data_dict = json.loads(data)
+    return model.model_validate(data_dict)
 
 
-class FilmRedisCache(RedisCache[Film]):
-    def _parse_instance_from_data(self, data: str) -> Film:
-        return Film.deserialize_cache(data)
-
-
-class PersonRedisCache(RedisCache[Person]):
-    def _parse_instance_from_data(self, data: str) -> Person:
-        data_dict = json.loads(data)
-        return Person.model_validate(data_dict)
-
-
-class GenreRedisCache(RedisCache[Genre]):
-    def _parse_instance_from_data(self, data: str) -> Genre:
-        data_dict = json.loads(data)
-        return Genre.model_validate(data_dict)
+# class FilmRedisCache(RedisCache[Film]):
+#     def _deserialize(self, data: str) -> Film:
+#         return Film.deserialize_cache(data)
+#
+#
+# class PersonRedisCache(RedisCache[Person]):
+#     def _deserialize(self, data: str) -> Person:
+#         data_dict = json.loads(data)
+#         return Person.model_validate(data_dict)
+#
+#
+# class GenreRedisCache(RedisCache[Genre]):
+#     def _deserialize(self, data: str) -> Genre:
+#         data_dict = json.loads(data)
+#         return Genre.model_validate(data_dict)

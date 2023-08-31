@@ -7,7 +7,7 @@ from fastapi import Depends
 from models.film import Film
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
-from .caching_service import FilmRedisCache
+from .caching_service import RedisCache
 from .search_service import ElasticSearchService
 from .searchable_model_service import SearchableModelService
 
@@ -16,6 +16,8 @@ from .searchable_model_service import SearchableModelService
 def get_film_service(
     redis: CacheStorageProtocol = Depends(get_redis), elastic: SearchEngineProtocol = Depends(get_elastic)
 ) -> SearchableModelService:
-    redis = FilmRedisCache(cache_storage=redis, prefix_plural="movies", prefix_single="movie")
+    redis = RedisCache(
+        cache_storage=redis, prefix_plural="movies", prefix_single="movie", deserialize=Film.deserialize_cache
+    )
     elastic = ElasticSearchService(search_engine=elastic, index="movies", deserialize=Film.deserialize_search)
     return SearchableModelService[Film](caching_service=redis, search_service=elastic)
