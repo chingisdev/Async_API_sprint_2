@@ -2,9 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Callable, Generic, List, Optional, Type, TypeVar
 
 from elasticsearch import NotFoundError
-from models.film import Film
-from models.genre import Genre
-from models.person import Person
 from pydantic import BaseModel
 from search_engine.search_engine_protocol import SearchEngineProtocol
 

@@ -1,5 +1,4 @@
 from functools import lru_cache, partial
-from typing import Optional
 
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
 from db.elastic import get_elastic

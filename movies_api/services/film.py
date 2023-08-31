@@ -8,7 +8,7 @@ from models.film import Film
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .caching_service import FilmRedisCache
-from .search_service import ElasticSearchService, FilmElasticSearchService
+from .search_service import ElasticSearchService
 from .searchable_model_service import SearchableModelService
 
 

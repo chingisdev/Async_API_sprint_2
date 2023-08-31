@@ -8,11 +8,7 @@ from models.genre import Genre
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .caching_service import GenreRedisCache
-from .search_service import (
-    ElasticSearchService,
-    GenreElasticSearchService,
-    auto_deserializer,
-)
+from .search_service import ElasticSearchService, auto_deserializer
 from .searchable_model_service import SearchableModelService
 
 
