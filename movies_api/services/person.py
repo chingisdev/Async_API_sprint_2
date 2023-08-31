@@ -8,7 +8,7 @@ from fastapi import Depends
 from models.person import Person
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
-from .caching_service import PersonCachingService
+from .caching_service import PersonRedisCache
 from .search_service import PersonSearchService
 from .searchable_model_service import SearchableModelService
 
@@ -18,6 +18,6 @@ def get_person_service(
     redis: CacheStorageProtocol = Depends(get_redis),
     elastic: SearchEngineProtocol = Depends(get_elastic),
 ) -> SearchableModelService:
-    redis = PersonCachingService(cache_storage=redis, prefix_plural="persons", prefix_single="person")
+    redis = PersonRedisCache(cache_storage=redis, prefix_plural="persons", prefix_single="person")
     elastic = PersonSearchService(search_engine=elastic, index="persons")
     return SearchableModelService[Person](caching_service=redis, search_service=elastic)

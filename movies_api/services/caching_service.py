@@ -1,5 +1,5 @@
 import json
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Generic, List, Optional, TypeVar
 
 import orjson
@@ -13,12 +13,43 @@ from pydantic import BaseModel
 T = TypeVar("T", bound=BaseModel)
 
 
-class CachingService(Generic[T]):
+class AbsractCache(ABC, Generic[T]):
     def __init__(self, cache_storage: CacheStorageProtocol, prefix_plural: str, prefix_single: str):
         self.cache_storage = cache_storage
         self.key_prefix_plural = prefix_plural
         self.key_prefix_single = prefix_single
 
+    @abstractmethod
+    async def get_instance_from_cache(self, instance_id: str) -> Optional[T]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_list_from_cache(
+        self,
+        page_size: int,
+        page_number: int,
+        search: str | None = None,
+        sort: str | None = None,
+    ) -> List[T]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def put_instance_to_cache(self, instance: T):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def put_list_to_cache(
+        self,
+        sort: str,
+        page_size: int,
+        page_number: int,
+        instances: List[T],
+        search: str | None = None,
+    ):
+        raise NotImplementedError
+
+
+class RedisCache(AbsractCache):
     async def get_instance_from_cache(self, instance_id: str) -> Optional[T]:
         cache_key = f"{self.key_prefix_single}_{instance_id}"
         data = await self.cache_storage.get(cache_key)
@@ -70,18 +101,18 @@ class CachingService(Generic[T]):
         raise NotImplementedError
 
 
-class FilmCachingService(CachingService[Film]):
+class FilmRedisCache(RedisCache[Film]):
     def _parse_instance_from_data(self, data: str) -> Film:
         return Film.deserialize_cache(data)
 
 
-class PersonCachingService(CachingService[Person]):
+class PersonRedisCache(RedisCache[Person]):
     def _parse_instance_from_data(self, data: str) -> Person:
         data_dict = json.loads(data)
         return Person.model_validate(data_dict)
 
 
-class GenreCachingService(CachingService[Genre]):
+class GenreRedisCache(RedisCache[Genre]):
     def _parse_instance_from_data(self, data: str) -> Genre:
         data_dict = json.loads(data)
         return Genre.model_validate(data_dict)

@@ -2,14 +2,14 @@ from typing import Generic, Optional, TypeVar
 
 from pydantic import BaseModel
 
-from .caching_service import CachingService
+from .caching_service import AbsractCache
 from .search_service import SearchService
 
 T = TypeVar("T", bound=BaseModel)
 
 
 class SearchableModelService(Generic[T]):
-    def __init__(self, caching_service: CachingService, search_service: SearchService):
+    def __init__(self, caching_service: AbsractCache, search_service: SearchService):
         self.cache = caching_service
         self.search = search_service
 
