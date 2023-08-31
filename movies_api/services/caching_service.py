@@ -49,7 +49,7 @@ class AbsractCache(ABC, Generic[T]):
         raise NotImplementedError
 
 
-class RedisCache(AbsractCache):
+class RedisCache(AbsractCache[T]):
     async def get_instance_from_cache(self, instance_id: str) -> Optional[T]:
         cache_key = f"{self.key_prefix_single}_{instance_id}"
         data = await self.cache_storage.get(cache_key)
@@ -63,7 +63,7 @@ class RedisCache(AbsractCache):
         page_number: int,
         search: str | None = None,
         sort: str | None = None,
-    ) -> List[T]:
+    ) -> List[T] | None:
         cache_key = f"{self.key_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
         data = await self.cache_storage.get(cache_key)
         if not data:
