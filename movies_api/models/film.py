@@ -30,9 +30,7 @@ class Film(BaseModel):
     genres: list[MovieGenre] | None
 
     @staticmethod
-    def deserialize_search(
-        document,
-    ):
+    def deserialize_search(document):
         return Film(
             id=document["_source"]["id"],
             title=document["_source"]["title"],
@@ -61,9 +59,7 @@ class Film(BaseModel):
         )
 
     @staticmethod
-    def deserialize_cache(
-        film_str: str,
-    ):
+    def deserialize_cache(film_str: str):
         film = orjson.loads(film_str)
 
         return Film(
