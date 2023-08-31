@@ -67,5 +67,5 @@ class ElasticSearchService(AbstractSearchService[T]):
         return [self._deserialize(doc) for doc in documents]
 
 
-def auto_deserializer(model: Type[BaseModel], data: dict):
+def automatic_search_deserializer(model: Type[BaseModel], data: dict):
     return model.model_validate(data["_source"])

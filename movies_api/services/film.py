@@ -16,8 +16,8 @@ from .searchable_model_service import SearchableModelService
 def get_film_service(
     redis: CacheStorageProtocol = Depends(get_redis), elastic: SearchEngineProtocol = Depends(get_elastic)
 ) -> SearchableModelService:
-    redis = RedisCache(
+    cache_service = RedisCache(
         cache_storage=redis, prefix_plural="movies", prefix_single="movie", deserialize=Film.deserialize_cache
     )
-    elastic = ElasticSearchService(search_engine=elastic, index="movies", deserialize=Film.deserialize_search)
-    return SearchableModelService[Film](caching_service=redis, search_service=elastic)
+    search_service = ElasticSearchService(search_engine=elastic, index="movies", deserialize=Film.deserialize_search)
+    return SearchableModelService[Film](caching_service=cache_service, search_service=search_service)
