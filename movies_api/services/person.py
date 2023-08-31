@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import Optional
 
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
@@ -9,7 +9,7 @@ from models.person import Person
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
 from .caching_service import PersonRedisCache
-from .search_service import PersonSearchService
+from .search_service import ElasticSearchService, auto_deserializer
 from .searchable_model_service import SearchableModelService
 
 
@@ -19,5 +19,7 @@ def get_person_service(
     elastic: SearchEngineProtocol = Depends(get_elastic),
 ) -> SearchableModelService:
     redis = PersonRedisCache(cache_storage=redis, prefix_plural="persons", prefix_single="person")
-    elastic = PersonSearchService(search_engine=elastic, index="persons")
+    elastic = ElasticSearchService(
+        search_engine=elastic, index="persons", deserialize=partial(auto_deserializer, Person)
+    )
     return SearchableModelService[Person](caching_service=redis, search_service=elastic)
