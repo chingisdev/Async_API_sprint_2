@@ -7,7 +7,7 @@ from fastapi import Depends
 from models.person import Person
 from search_engine.search_engine_protocol import SearchEngineProtocol
 
-from .caching_service import RedisCache, automatic_cache_deserializer
+from .caching_service import RedisCacheService, automatic_cache_deserializer
 from .search_service import ElasticSearchService, automatic_search_deserializer
 from .searchable_model_service import SearchableModelService
 
@@ -19,7 +19,7 @@ def get_person_service(
 ) -> SearchableModelService:
     cache_deserializer = partial(automatic_cache_deserializer, Person)
     search_deserializer = partial(automatic_search_deserializer, Person)
-    cache_service = RedisCache(
+    cache_service = RedisCacheService(
         cache_storage=redis,
         prefix_plural="persons",
         prefix_single="person",

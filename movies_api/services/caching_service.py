@@ -9,7 +9,7 @@ from pydantic import BaseModel
 T = TypeVar("T", bound=BaseModel)
 
 
-class AbsractCache(ABC, Generic[T]):
+class AbsractCacheService(ABC, Generic[T]):
     def __init__(
         self,
         cache_storage: CacheStorageProtocol,
@@ -52,7 +52,7 @@ class AbsractCache(ABC, Generic[T]):
         raise NotImplementedError
 
 
-class RedisCache(AbsractCache):
+class RedisCacheService(AbsractCacheService):
     async def get_instance_from_cache(self, instance_id: str) -> Optional[T]:
         cache_key = f"{self.key_prefix_single}_{instance_id}"
         data = await self.cache_storage.get(cache_key)
