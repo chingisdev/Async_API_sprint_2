@@ -1,13 +1,9 @@
-import json
 from abc import ABC, abstractmethod
 from typing import Callable, Generic, List, Optional, Type, TypeVar
 
 import orjson
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
 from core.config import settings
-from models.film import Film
-from models.genre import Genre
-from models.person import Person
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
@@ -101,22 +97,5 @@ class RedisCache(AbsractCache[T]):
 
 
 def automatic_cache_deserializer(model: Type[T], data: str) -> T:
-    data_dict = json.loads(data)
+    data_dict = orjson.loads(data)
     return model.model_validate(data_dict)
-
-
-# class FilmRedisCache(RedisCache[Film]):
-#     def _deserialize(self, data: str) -> Film:
-#         return Film.deserialize_cache(data)
-#
-#
-# class PersonRedisCache(RedisCache[Person]):
-#     def _deserialize(self, data: str) -> Person:
-#         data_dict = json.loads(data)
-#         return Person.model_validate(data_dict)
-#
-#
-# class GenreRedisCache(RedisCache[Genre]):
-#     def _deserialize(self, data: str) -> Genre:
-#         data_dict = json.loads(data)
-#         return Genre.model_validate(data_dict)
