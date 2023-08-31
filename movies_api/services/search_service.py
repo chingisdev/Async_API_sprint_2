@@ -12,7 +12,7 @@ class AbstractSearchService(ABC, Generic[T]):
     def __init__(self, search_engine: SearchEngineProtocol, index: str, deserialize: Callable[[dict], T]):
         self.search_engine = search_engine
         self.index = index
-        self.deserialize = deserialize
+        self._deserialize = deserialize
 
     @abstractmethod
     async def get_by_id(self, instance_id: str) -> Optional[T]:
@@ -29,7 +29,7 @@ class ElasticSearchService(AbstractSearchService[T]):
     async def get_by_id(self, instance_id: str) -> Optional[T]:
         try:
             doc = await self.search_engine.get(index=self.index, id=instance_id)
-            return self.deserialize(doc)
+            return self._deserialize(doc)
         except NotFoundError:
             return None
 
@@ -64,7 +64,7 @@ class ElasticSearchService(AbstractSearchService[T]):
         except NotFoundError:
             return None
         documents = doc["hits"]["hits"]
-        return [self.deserialize(doc) for doc in documents]
+        return [self._deserialize(doc) for doc in documents]
 
 
 def auto_deserializer(model: Type[BaseModel], data: dict):
