@@ -42,6 +42,8 @@ services:
       - redis
     expose:
       - "8000"
+    ports:
+      - "8000:8000"
     env_file:
       - .env.example
 
@@ -56,6 +58,8 @@ services:
     command: ["/docker-custom-entrypoint/init.sh"]
     expose:
       - "5432"
+    ports:
+      - "5432:5432"
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
@@ -68,6 +72,8 @@ services:
     image: redis:latest
     expose:
       - "6379"
+    ports:
+      - "6379:6379"
     restart: unless-stopped
 
   elasticsearch:
@@ -80,6 +86,8 @@ services:
       - ./volumes/elastic:/usr/share/elasticsearch/data
     expose:
       - "9200"
+    ports:
+      - "9200:9200"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost:9200/_cluster/health || exit 1"]
