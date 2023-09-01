@@ -12,5 +12,8 @@ COPY . .
 RUN sed -i 's/\r$//' entrypoint.sh
 RUN chmod +x entrypoint.sh
 
-CMD ["/app/tests/entrypoint.sh"]
+
+ENV PYTHONPATH=/app/tests
+
+CMD ["sh", "entrypoint.sh"]
 
