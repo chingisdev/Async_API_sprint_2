@@ -13,7 +13,7 @@ Follow these steps to install and run the project:
 
 1. Clone the repository:
 ```shell
-git clone https://github.com/credo7/Async_API_sprint_1.git
+git clone https://github.com/chingisdev/Async_API_sprint_2.git
 ```
 </br>
 

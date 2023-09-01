@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Callable, Generic, List, Optional, Type, TypeVar
 
 import orjson
+from backoff.backoff import backoff_public_methods
 from cache_storage.cache_storage_protocol import CacheStorageProtocol
 from core.config import settings
 from pydantic import BaseModel
@@ -52,6 +53,7 @@ class AbsractCacheService(ABC, Generic[T]):
         raise NotImplementedError
 
 
+@backoff_public_methods()        
 class RedisCacheService(AbsractCacheService):
     async def get_instance_from_cache(self, instance_id: str) -> Optional[T]:
         cache_key = f"{self.key_prefix_single}_{instance_id}"
@@ -83,12 +85,7 @@ class RedisCacheService(AbsractCacheService):
         )
 
     async def put_list_to_cache(
-        self,
-        sort: str,
-        page_size: int,
-        page_number: int,
-        instances: List[T],
-        search: str | None = None,
+        self, sort: str, page_size: int, page_number: int, instances: List[T], search: str | None = None
     ):
         cache_key = f"{self.key_prefix_plural}_{search or ''}_{sort or ''}_{page_size}_{page_number}"
         instances_json_list = [instance.model_dump_json() for instance in instances]

@@ -1,14 +1,10 @@
 class BaseQueryBuilder:
-    def build_query(
-        self,
-    ) -> str:
+    def build_query(self) -> str:
         pass
 
 
 class TargetQuery(BaseQueryBuilder):
-    def build_query(
-        self,
-    ) -> str:
+    def build_query(self) -> str:
         return """
         SELECT id
         FROM {base_table}
@@ -18,9 +14,7 @@ class TargetQuery(BaseQueryBuilder):
 
 
 class RelatedQuery(BaseQueryBuilder):
-    def build_query(
-        self,
-    ) -> str:
+    def build_query(self) -> str:
         return """
         SELECT DISTINCT f.id AS film_id
         FROM {relative_table} related
@@ -31,9 +25,7 @@ class RelatedQuery(BaseQueryBuilder):
 
 
 class GenreTransformQuery(BaseQueryBuilder):
-    def build_query(
-        self,
-    ) -> str:
+    def build_query(self) -> str:
         return """
         SELECT
             g.id, g.name, g.description
@@ -43,9 +35,7 @@ class GenreTransformQuery(BaseQueryBuilder):
 
 
 class MoviesTransformQuery(BaseQueryBuilder):
-    def build_query(
-        self,
-    ) -> str:
+    def build_query(self) -> str:
         return """
         SELECT
                     fw.id,
@@ -101,9 +91,7 @@ class MoviesTransformQuery(BaseQueryBuilder):
 
 
 class PersonTransformQuery(BaseQueryBuilder):
-    def build_query(
-        self,
-    ) -> str:
+    def build_query(self) -> str:
         return """
         SELECT p.id,
             p.full_name,
@@ -125,9 +113,7 @@ class PersonTransformQuery(BaseQueryBuilder):
 
 
 class EarliestUpdateTimeQuery(BaseQueryBuilder):
-    def build_query(
-        self,
-    ) -> str:
+    def build_query(self) -> str:
         return """
         SELECT MIN(updated_at)
         FROM {0}

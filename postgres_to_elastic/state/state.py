@@ -7,18 +7,11 @@ from time_event_decorators.backoff import backoff
 class State:
     """Class for managing states."""
 
-    def __init__(
-        self,
-        storage: BaseStorage,
-    ) -> None:
+    def __init__(self, storage: BaseStorage) -> None:
         self.storage = storage
 
     @backoff()
-    def set_state(
-        self,
-        key: str,
-        value: Any,
-    ) -> None:
+    def set_state(self, key: str, value: Any) -> None:
         """
         Set the state for a specific key.
 
@@ -27,19 +20,10 @@ class State:
 
         :return: None
         """
-        self.storage.save_state(
-            {
-                "key": key,
-                "value": value,
-            }
-        )
+        self.storage.save_state({"key": key, "value": value})
 
     @backoff()
-    def get_state(
-        self,
-        key: str,
-        default: Any = None,
-    ) -> Optional[Any]:
+    def get_state(self, key: str, default: Any = None) -> Optional[Any]:
         """
         Get the state for a specific key.
 

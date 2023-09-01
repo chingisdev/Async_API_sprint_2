@@ -19,21 +19,15 @@ class Settings(BaseSettings):
     repeat_time_seconds: int
 
     @property
-    def elastic_url(
-        self,
-    ):
+    def elastic_url(self):
         return f"{self.elastic_scheme}://{self.elastic_host}:{self.elastic_port}"
 
     @property
-    def database_url(
-        self,
-    ):
+    def database_url(self):
         return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
     @property
-    def redis_url(
-        self,
-    ):
+    def redis_url(self):
         return f"redis://{self.redis_host}:{self.redis_port}/0"
 
     class Config:

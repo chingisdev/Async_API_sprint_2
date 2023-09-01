@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Generic, List, Optional, Type, TypeVar
 
+from backoff.backoff import backoff_public_methods
 from elasticsearch import NotFoundError
 from pydantic import BaseModel
 from search_engine.search_engine_protocol import SearchEngineProtocol
@@ -25,6 +26,7 @@ class AbstractSearchService(ABC, Generic[T]):
         raise NotImplementedError("Subclasses must implement this method")
 
 
+@backoff_public_methods()        
 class ElasticSearchService(AbstractSearchService[T]):
     async def get_by_id(self, instance_id: str) -> Optional[T]:
         try:
@@ -37,24 +39,13 @@ class ElasticSearchService(AbstractSearchService[T]):
         self, page_number: int, page_size: int, search: str | None = None, sort: str | None = None
     ) -> Optional[List[T]]:
         query = {
-            "query": {
-                "multi_match": {
-                    "query": search,
-                    "fields": ["*"],
-                    "fuzziness": "AUTO",
-                }
-            }
-            if search
-            else {"match_all": {}},
+            "query": self._get_query_match(search=search),
             "size": page_size,
             "from": (page_number - 1) * page_size,
         }
 
         if sort:
-            (sort_key, sort_order,) = (
-                (sort[1:], "desc") if sort.startswith("-") else (sort, "asc")
-            )
-            query["sort"] = [{sort_key: sort_order}]
+            query["sort"] = self._get_sort_params(sort=sort)
 
         try:
             doc = await self.search_engine.search(
@@ -69,3 +60,4 @@ class ElasticSearchService(AbstractSearchService[T]):
 
 def automatic_search_deserializer(model: Type[BaseModel], data: dict):
     return model.model_validate(data["_source"])
+
