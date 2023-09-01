@@ -4,3 +4,6 @@ aiohttp
 elasticsearch
 pydantic
 pydantic_settings
+elasticsearch
+redis
+tenacity
