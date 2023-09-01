@@ -1,0 +1,107 @@
+version: "3.7"
+name: async-api
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx_reverse_proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/site.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - movies-api
+
+  etl-service:
+    build: postgres_to_elastic
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - elasticsearch
+      - redis
+      - sqlite-to-postgres
+    env_file:
+      - .env.example
+
+  sqlite-to-postgres:
+    build: sqlite_to_postgres
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    env_file:
+      - .env.example
+    expose:
+      - "8010"
+
+  movies-api:
+    build: movies_api
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+      - redis
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+
+  postgres:
+    image: postgres:13
+    volumes:
+      - ./init_postgres.sh:/docker-custom-entrypoint/init.sh
+      - ./volumes/postgres:/var/lib/postgresql/data
+      - ./schema_design/scripts:/docker-entrypoint-initdb.d
+    env_file:
+      - .env.example
+    command: ["/docker-custom-entrypoint/init.sh"]
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
+      interval: 10s
+      retries: 30
+      start_period: 20s
+      timeout: 10s
+
+  redis:
+    image: redis:latest
+    expose:
+      - "6379"
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  elasticsearch:
+    image: elasticsearch:8.6.2
+    environment:
+      - discovery.type=single-node
+      - network.host=0.0.0.0
+      - xpack.security.enabled=false
+    volumes:
+      - ./volumes/elastic:/usr/share/elasticsearch/data
+    expose:
+      - "9200"
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      retries: 5
+
+  functional-tests:
+    build: tests
+    entrypoint: >
+      sh -c "python3 /tests/functional/utils/wait_for_es.py
+      && python3 /tests/functional/utils/wait_for_redis.py
+      && pytest /tests"
+
+    env_file:
+      - ./tests/functional/.env.example
+    depends_on:
+     - movies-api
