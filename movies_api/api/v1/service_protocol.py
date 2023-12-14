@@ -13,3 +13,6 @@ class ModelServiceProtocol(Protocol[T]):
         self, search: Optional[str], page_number: int, page_size: int, sort: str = None
     ) -> List[Optional[T]]:
         ...
+
+    async def get_many_by_ids(self, ids: List[str]) -> List[Optional[T]]:
+        ...

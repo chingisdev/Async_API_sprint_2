@@ -26,7 +26,7 @@ class AbstractSearchService(ABC, Generic[T]):
         raise NotImplementedError("Subclasses must implement this method")
 
 
-@backoff_public_methods()        
+@backoff_public_methods()
 class ElasticSearchService(AbstractSearchService[T]):
     async def get_by_id(self, instance_id: str) -> Optional[T]:
         try:
@@ -57,7 +57,25 @@ class ElasticSearchService(AbstractSearchService[T]):
         documents = doc["hits"]["hits"]
         return [self._deserialize(doc) for doc in documents]
 
+    @staticmethod
+    def _get_sort_params(sort):
+        (sort_key, sort_order,) = (
+            (sort[1:], "desc") if sort.startswith("-") else (sort, "asc")
+        )
+        return [{sort_key: sort_order}]
+
+    @staticmethod
+    def _get_query_match(search: str | None):
+        if search:
+            return {
+                "multi_match": {
+                    "query": search,
+                    "fields": ["*"],
+                    "fuzziness": "AUTO",
+                }
+            }
+        return {"match_all": {}}
+
 
 def automatic_search_deserializer(model: Type[BaseModel], data: dict):
     return model.model_validate(data["_source"])
-
