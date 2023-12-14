@@ -46,10 +46,10 @@ async def film_details(film_id: str, model_service: ModelServiceProtocol[Film] =
     return film
 
 
-@router.get("/movies/", summary="Get movies by IDs", response_model=List[Film])
+@router.get("/", summary="Get movies by IDs", response_model=List[Film])
 async def get_movies_by_ids(
-    ids: List[str] = Query(None, description="List of movie IDs"),
+    id: List[str] = Query(None, description="List of movie IDs"),
     model_service: ModelServiceProtocol[Film] = Depends(get_film_service),
 ) -> List[Film]:
-    films = await model_service.get_many_by_ids(ids)
+    films = await model_service.get_many_by_ids(id)
     return films
