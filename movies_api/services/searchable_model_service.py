@@ -1,4 +1,4 @@
-from typing import Generic, Optional, TypeVar
+from typing import Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel
 
@@ -24,7 +24,7 @@ class SearchableModelService(Generic[T]):
 
     async def get_many_by_parameters(
         self, page_number: int, page_size: int, search: str | None = None, sort: str | None = None
-    ) -> list[Optional[T]]:
+    ) -> List[Optional[T]]:
         items = await self.cache.get_list_from_cache(
             search=search, page_size=page_size, page_number=page_number, sort=sort
         )
@@ -37,4 +37,17 @@ class SearchableModelService(Generic[T]):
             await self.cache.put_list_to_cache(
                 search=search, page_number=page_number, page_size=page_size, sort=sort, instances=items
             )
+        return items
+
+    async def get_many_by_ids(self, ids: List[str]) -> List[Optional[T]]:
+        items = [await self.cache.get_instance_from_cache(entity_id) for entity_id in ids]
+        missing_ids = [entity_id for entity_id, item in zip(ids, items) if item is None]
+
+        if missing_ids:
+            for missing_id in missing_ids:
+                item = await self.search.get_by_id(missing_id)
+                if item:
+                    await self.cache.put_instance_to_cache(item)
+                    items[ids.index(missing_id)] = item
+
         return items
