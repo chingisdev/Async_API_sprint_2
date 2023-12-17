@@ -27,7 +27,7 @@ wait_for_service redis 6379
 #  echo "Waiting for sqlite to postgres etl to complete..."
 #  sleep 5
 #done
-wait_for_service sqlite-to-postgres 8010
+# wait_for_service sqlite-to-postgres 8010
 
 
 python main.py
